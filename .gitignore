@@ -1,0 +1,27 @@
+# Built application files & Gradle caches
+*.apk
+*.aar
+*.ap_
+*.aab
+.gradle/
+build/
+**/build/
+
+# Local configuration files (contains local SDK paths, keystores, API keys)
+local.properties
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+*.jks
+
+# Android Studio / IntelliJ IDEA settings
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+
+# Kotlin / Java
+*.class
