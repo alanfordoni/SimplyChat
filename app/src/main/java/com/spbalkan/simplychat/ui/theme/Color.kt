@@ -2,10 +2,12 @@ package com.spbalkan.simplychat.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Dark Theme Colors
+val Blue80 = Color(0xFF87CEFA)      // Primary: Light Sky Blue
+val BlueGrey80 = Color(0xFFB0C4DE)  // Secondary: Light Steel Blue
+val IceBlue80 = Color(0xFFE0F7FA)   // Tertiary: Very Light Cyan/Blue
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Light Theme Colors
+val Blue40 = Color(0xFF4682B4)      // Primary: Steel Blue
+val BlueGrey40 = Color(0xFF465E6D)  // Secondary: Slate Blue-Grey
+val IceBlue40 = Color(0xFF006064)   // Tertiary: Dark Cyan

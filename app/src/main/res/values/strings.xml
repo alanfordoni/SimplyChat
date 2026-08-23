@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Simply Chat</string>
+    <string name="register">Register</string>
+    <string name="login">Login</string>
 </resources>

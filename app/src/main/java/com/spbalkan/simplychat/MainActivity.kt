@@ -4,14 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.spbalkan.simplychat.auth.ui.WelcomeScreen
 import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
+import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +19,91 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SimplyChatTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                AppNavHost()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun AppNavHost(
+    navController: NavHostController = rememberNavController(),
+    startDestination: Screen = Screen.Welcome
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable<Screen.Welcome> {
+            WelcomeScreen(
+                onNavigateToRegister = { navController.navigate(Screen.Register) },
+                onNavigateToLogin = { navController.navigate(Screen.Login) }
+            )
+        }
+
+        /*composable<Screen.Login> {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Screen.ConversationsList) {
+                        // Clear the entire back stack
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = { navController.navigate(Screen.Register) }
+            )
+        }
+
+        composable<Screen.Register> {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(Screen.ConversationsList) {
+                        // Clear the entire back stack
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = { navController.popBackStack() }
+            )
+        }
+
+        composable<Screen.ConversationsList> {
+            ConversationsListScreen(
+                onChatSelected = { chatId ->
+                    navController.navigate(Screen.Chat(chatId = chatId))
+                },
+                onLogout = {
+                    navController.navigate(Screen.Welcome) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable<Screen.Chat> { backStackEntry ->
+            val chatRoute: Screen.Chat = backStackEntry.toRoute()
+
+            ChatScreen(
+                chatId = chatRoute.chatId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }*/
+    }
+
+
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SimplyChatTheme {
-        Greeting("Android")
-    }
+sealed interface Screen {
+    @Serializable
+    data object Welcome : Screen
+
+    @Serializable
+    data object Login : Screen
+
+    @Serializable
+    data object Register : Screen
+
+    @Serializable
+    data object ConversationsList : Screen
+
+    @Serializable
+    data class Chat(val chatId: String) : Screen
 }
