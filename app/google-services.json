@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1034087295645",
+    "project_id": "simplychat-f1a32",
+    "storage_bucket": "simplychat-f1a32.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034087295645:android:80890996ed4e91aa118274",
+        "android_client_info": {
+          "package_name": "com.spbalkan.simplychat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBo2YCBthb9IigU3iVhIOu-5-3VPTaliKc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
