@@ -43,14 +43,14 @@ fun WelcomeScreen(
                 CustomFilledButton(
                     textRes = R.string.register,
                     onClick = {
-
+                        onNavigateToRegister()
                     }
                 )
 
                 CustomFilledButton(
                     textRes = R.string.login,
                     onClick = {
-
+                        onNavigateToLogin()
                     }
                 )
             }
