@@ -6,15 +6,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -28,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.auth.viewmodels.LoginViewModel
 import com.spbalkan.simplychat.auth.viewmodels.LoginViewModel.ActionIntent.*
+import com.spbalkan.simplychat.ui.CustomBlockingCircleLoader
 import com.spbalkan.simplychat.ui.CustomFilledButton
 import com.spbalkan.simplychat.ui.CustomInputTextView
 import com.spbalkan.simplychat.ui.CustomPasswordInputText
@@ -41,9 +48,28 @@ fun LoginScreen(
 ) {
 
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.event.collect {
+            when (it) {
+                is LoginViewModel.LoginEvent.Success -> {
+                    onLoginSuccess()
+                }
+
+                is LoginViewModel.LoginEvent.Error -> {
+                    val snackTitle = it.error
+                    snackbarHostState.showSnackbar(
+                        message = snackTitle
+                    )
+                }
+            }
+        }
+    }
 
     LoginScreenContent(
         state = state,
+        snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction,
         onRegister = onNavigateToRegister
     )
@@ -52,6 +78,7 @@ fun LoginScreen(
 @Composable
 fun LoginScreenContent(
     state: LoginViewModel.LoginState,
+    snackbarHostState: SnackbarHostState,
     onAction: (LoginViewModel.ActionIntent) -> Unit,
     onRegister: () -> Unit
 ) {
@@ -74,7 +101,6 @@ fun LoginScreenContent(
 
         var isEmailDirty by rememberSaveable { mutableStateOf(false) }
         var isPasswordDirty by rememberSaveable { mutableStateOf(false) }
-        var isConfirmPasswordDirty by rememberSaveable { mutableStateOf(false) }
 
         Column(
             modifier = Modifier
@@ -112,7 +138,7 @@ fun LoginScreenContent(
                 modifier = Modifier
                     .wrapContentWidth()
                     .align(Alignment.End),
-                onClick = onRegister
+                onClick = { onRegister() }
             ) {
                 Text(
                     modifier = Modifier.widthIn(min = 120.dp),
@@ -121,6 +147,23 @@ fun LoginScreenContent(
                 )
             }
         }
+    }
+
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.TopCenter)
+            .padding(top = 16.dp),
+        snackbar = { data ->
+            Snackbar(
+                snackbarData = data
+            )
+        }
+    )
+
+    if (state.isLoading) {
+        CustomBlockingCircleLoader()
     }
 }
 
@@ -131,6 +174,7 @@ fun LoginScreenPreview() {
     SimplyChatTheme {
         LoginScreenContent(
             state = state,
+            snackbarHostState = SnackbarHostState(),
             onAction = {},
             onRegister = {}
         )

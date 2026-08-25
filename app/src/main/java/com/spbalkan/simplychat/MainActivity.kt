@@ -1,6 +1,7 @@
 package com.spbalkan.simplychat
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,20 +12,41 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.spbalkan.simplychat.auth.ui.LoginScreen
 import com.spbalkan.simplychat.auth.ui.RegisterScreen
 import com.spbalkan.simplychat.auth.ui.WelcomeScreen
+import com.spbalkan.simplychat.chat.ui.ConversationsListScreen
 import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var auth: FirebaseAuth
+    private lateinit var startDestination: Screen
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        auth = Firebase.auth
+        if (savedInstanceState == null) checkAuthState()
+
         setContent {
             SimplyChatTheme {
-                AppNavHost()
+                AppNavHost(startDestination = startDestination)
             }
+        }
+    }
+
+    private fun checkAuthState() {
+        val currentUser = auth.currentUser
+        startDestination = if (currentUser != null) {
+            Screen.ConversationsList
+        } else {
+            Screen.Welcome
         }
     }
 }
@@ -79,8 +101,6 @@ fun AppNavHost(
             )
         }
 
-        /*
-
         composable<Screen.ConversationsList> {
             ConversationsListScreen(
                 onChatSelected = { chatId ->
@@ -94,13 +114,14 @@ fun AppNavHost(
             )
         }
 
-        composable<Screen.Chat> { backStackEntry ->
-            val chatRoute: Screen.Chat = backStackEntry.toRoute()
+        /*
+            composable<Screen.Chat> { backStackEntry ->
+                val chatRoute: Screen.Chat = backStackEntry.toRoute()
 
-            ChatScreen(
-                chatId = chatRoute.chatId,
-                onNavigateBack = { navController.popBackStack() }
-            )
+                ChatScreen(
+                    chatId = chatRoute.chatId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
         }*/
     }
 
