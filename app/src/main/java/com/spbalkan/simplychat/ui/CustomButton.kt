@@ -18,6 +18,7 @@ import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 fun CustomFilledButton(
     modifier: Modifier = Modifier,
     @StringRes textRes: Int,
+    isEnabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Button(
@@ -25,6 +26,7 @@ fun CustomFilledButton(
             .fillMaxWidth()
             .heightIn(min = 56.dp),
         shape = RoundedCornerShape(16.dp),
+        enabled = isEnabled,
         onClick = onClick
     ) {
         Text(

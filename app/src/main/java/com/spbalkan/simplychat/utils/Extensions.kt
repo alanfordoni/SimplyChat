@@ -8,3 +8,9 @@ fun String.isValidEmail(): Boolean {
     Log.d("zzExt", "isValidEmail: ${emailRegex.matches(this)}")
     return emailRegex.matches(this)
 }
+
+fun String.isPasswordValid(): Boolean {
+    val passwordRegex = Regex("^(?=.*[A-Za-z])(?=.*\\d).{8,}$")
+
+    return passwordRegex.matches(this)
+}

@@ -6,15 +6,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.auth.viewmodels.RegisterViewModel
+import com.spbalkan.simplychat.ui.CustomBlockingCircleLoader
 import com.spbalkan.simplychat.ui.CustomFilledButton
 import com.spbalkan.simplychat.ui.CustomInputTextView
 import com.spbalkan.simplychat.ui.CustomPasswordInputText
@@ -39,8 +46,28 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.event.collect {
+            when (it) {
+                is RegisterViewModel.RegisterEvent.Success -> {
+                    onRegisterSuccess()
+                }
+
+                is RegisterViewModel.RegisterEvent.Error -> {
+                    val snackTitle = it.error
+                    snackbarHostState.showSnackbar(
+                        message = snackTitle
+                    )
+                }
+            }
+        }
+    }
+
     RegisterScreenContent(
         state = state,
+        snackbarHostState = snackbarHostState,
         onAction = viewModel::onActionIntent,
         onLogin = onNavigateToLogin
     )
@@ -49,6 +76,7 @@ fun RegisterScreen(
 @Composable
 fun RegisterScreenContent(
     state: RegisterViewModel.RegisterState,
+    snackbarHostState: SnackbarHostState,
     onAction: (RegisterViewModel.ActionIntent) -> Unit,
     onLogin: () -> Unit
 ) {
@@ -61,9 +89,8 @@ fun RegisterScreenContent(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 textRes = R.string.register,
-                onClick = {
-                    onAction(RegisterViewModel.ActionIntent.OnRegister)
-                }
+                isEnabled = state.registerEnabled,
+                onClick = { onAction(RegisterViewModel.ActionIntent.OnRegister) }
             )
         }
     ) { paddingValues ->
@@ -120,7 +147,7 @@ fun RegisterScreenContent(
                 modifier = Modifier
                     .wrapContentWidth()
                     .align(Alignment.End),
-                onClick = onLogin
+                onClick = { onLogin() }
             ) {
                 Text(
                     modifier = Modifier.widthIn(min = 120.dp),
@@ -128,6 +155,23 @@ fun RegisterScreenContent(
                     textAlign = TextAlign.End
                 )
             }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .fillMaxSize()
+                .wrapContentSize(Alignment.TopCenter)
+                .padding(top = 16.dp),
+            snackbar = { data ->
+                Snackbar(
+                    snackbarData = data
+                )
+            }
+        )
+
+        if (state.isLoading) {
+            CustomBlockingCircleLoader()
         }
     }
 }
@@ -140,6 +184,7 @@ fun RegisterScreenPreview() {
     SimplyChatTheme {
         RegisterScreenContent (
             state = state,
+            snackbarHostState = SnackbarHostState(),
             onAction = {},
             onLogin = {}
         )
