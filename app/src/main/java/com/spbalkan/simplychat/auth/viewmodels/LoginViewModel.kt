@@ -1,10 +1,9 @@
 package com.spbalkan.simplychat.auth.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.spbalkan.simplychat.ServiceLocator
+import com.spbalkan.simplychat.auth.AuthResult
 import com.spbalkan.simplychat.utils.isPasswordValid
 import com.spbalkan.simplychat.utils.isValidEmail
 import kotlinx.coroutines.channels.Channel
@@ -13,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class LoginViewModel : ViewModel() {
 
@@ -26,20 +24,26 @@ class LoginViewModel : ViewModel() {
     fun onAction(action: ActionIntent) {
         when (action) {
             is ActionIntent.OnEmailChange -> {
+                val email = action.email
+                val emailError = !email.isValidEmail()
+
                 _state.update { currentState ->
                     currentState.copy(
-                        email = action.email,
-                        emailError = !action.email.isValidEmail()
+                        email = email,
+                        emailError = emailError,
+                        loginEnabled = isLoginEnabled(emailError, currentState.passwordError)
                     )
                 }
             }
 
             is ActionIntent.OnPasswordChange -> {
                 val password = action.password
+                val passwordError = !password.isPasswordValid()
                 _state.update { currentState ->
                     currentState.copy(
                         password = password,
-                        passwordError = !password.isPasswordValid()
+                        passwordError = passwordError,
+                        loginEnabled = isLoginEnabled(currentState.emailError, passwordError)
                     )
                 }
             }
@@ -50,6 +54,10 @@ class LoginViewModel : ViewModel() {
         }
     }
 
+    private fun isLoginEnabled(emailError: Boolean, passwordError: Boolean): Boolean {
+        return !emailError && !passwordError
+    }
+
     fun login() {
         val email = _state.value.email
         val password = _state.value.password
@@ -57,20 +65,19 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
-            try {
-                Firebase.auth
-                    .signInWithEmailAndPassword(email, password)
-                    .await()
-                _eventChannel.send(LoginEvent.Success)
+            val result = ServiceLocator.authRepository.onLogin(email, password)
+            when (result) {
+                is AuthResult.LoginSuccess -> {
+                    _eventChannel.send(LoginEvent.Success)
+                }
 
-            } catch (e: Exception) {
-                Log.e(TAG, "login: error: ${e.localizedMessage}")
-                val errorMessage = e.localizedMessage ?: "Authentication failed."
-                _eventChannel.send(LoginEvent.Error(errorMessage))
+                is AuthResult.Error -> {
+                    _eventChannel.send(LoginEvent.Error(result.error))
+                }
 
-            } finally {
-                _state.update { it.copy(isLoading = false) }
+                else -> {}
             }
+            _state.update { it.copy(isLoading = false) }
         }
     }
 
@@ -79,7 +86,8 @@ class LoginViewModel : ViewModel() {
         val password: String = "",
         val isLoading: Boolean = false,
         val emailError: Boolean = false,
-        val passwordError: Boolean = false
+        val passwordError: Boolean = false,
+        val loginEnabled: Boolean = false
     )
 
     sealed class ActionIntent {
@@ -91,9 +99,5 @@ class LoginViewModel : ViewModel() {
     sealed interface LoginEvent {
         data object Success : LoginEvent
         data class Error(val error: String) : LoginEvent
-    }
-
-    companion object {
-        const val TAG = "LoginVM"
     }
 }

@@ -1,20 +1,19 @@
 package com.spbalkan.simplychat
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.spbalkan.simplychat.auth.ui.LoginScreen
 import com.spbalkan.simplychat.auth.ui.RegisterScreen
 import com.spbalkan.simplychat.auth.ui.WelcomeScreen
@@ -24,38 +23,25 @@ import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var startDestination: Screen
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        auth = Firebase.auth
-        if (savedInstanceState == null) checkAuthState()
-
         setContent {
             SimplyChatTheme {
-                AppNavHost(startDestination = startDestination)
+                AppNavHost()
             }
-        }
-    }
-
-    private fun checkAuthState() {
-        val currentUser = auth.currentUser
-        startDestination = if (currentUser != null) {
-            Screen.ConversationsList
-        } else {
-            Screen.Welcome
         }
     }
 }
 
 @Composable
-fun AppNavHost(
-    navController: NavHostController = rememberNavController(),
-    startDestination: Screen = Screen.Welcome
-) {
+fun AppNavHost() {
+
+    val navController: NavHostController = rememberNavController()
+    val viewmodel: MainViewModel = viewModel()
+    val startDestination by viewmodel.startDestination.collectAsStateWithLifecycle()
+
     NavHost(
         modifier = Modifier.systemBarsPadding(),
         navController = navController,

@@ -92,6 +92,7 @@ fun LoginScreenContent(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 textRes = R.string.login,
+                isEnabled = state.loginEnabled,
                 onClick = {
                     onAction(OnLogin)
                 }

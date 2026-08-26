@@ -3,8 +3,8 @@ package com.spbalkan.simplychat.auth.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.spbalkan.simplychat.ServiceLocator
+import com.spbalkan.simplychat.auth.AuthResult
 import com.spbalkan.simplychat.utils.isPasswordValid
 import com.spbalkan.simplychat.utils.isValidEmail
 import kotlinx.coroutines.channels.Channel
@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class RegisterViewModel : ViewModel() {
 
@@ -83,31 +82,6 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    fun register() {
-        val email = _state.value.email
-        val password = _state.value.password
-
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-
-            try {
-                val authResult = Firebase.auth
-                    .createUserWithEmailAndPassword(email, password)
-                    .await()
-
-                Log.d(TAG, "register: success: ${authResult.user}")
-                val userId = authResult.user?.uid.orEmpty()
-                _eventChannel.send(RegisterEvent.Success(userId))
-            } catch (e: Exception) {
-                Log.e(TAG, "register: error: ${e.localizedMessage}")
-                val errorMessage = e.localizedMessage ?: "Authentication failed."
-                _eventChannel.send(RegisterEvent.Error(errorMessage))
-            } finally {
-                _state.update { it.copy(isLoading = false) }
-            }
-        }
-    }
-
     private fun isRegisterEnabled(
         emailError: Boolean,
         passwordError: Boolean,
@@ -117,6 +91,33 @@ class RegisterViewModel : ViewModel() {
         return !emailError &&
                 !passwordError &&
                 !confirmPasswordError
+    }
+
+    fun register() {
+        val email = _state.value.email
+        val password = _state.value.password
+
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            Log.d(TAG, "register: ")
+
+            val result = ServiceLocator.authRepository.onRegister(email, password)
+            Log.d(TAG, "register: 2")
+
+            when (result) {
+                is AuthResult.RegisterSuccess -> {
+                    _eventChannel.send(RegisterEvent.Success)
+                }
+
+                is AuthResult.Error -> {
+                    _eventChannel.send(RegisterEvent.Error(result.error))
+                }
+
+                else -> {}
+            }
+
+            _state.update { it.copy(isLoading = false) }
+        }
     }
 
     data class RegisterState(
@@ -138,7 +139,7 @@ class RegisterViewModel : ViewModel() {
     }
 
     sealed interface RegisterEvent {
-        data class Success(val msg: String) : RegisterEvent
+        data object Success : RegisterEvent
         data class Error(val error: String) : RegisterEvent
     }
 
