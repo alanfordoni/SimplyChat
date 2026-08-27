@@ -35,8 +35,7 @@ class RegisterViewModel : ViewModel() {
 
                 if (username.length > 4) {
                     viewModelScope.launch {
-                        val isAvailable = ServiceLocator.authRepository.isUsernameAvailable(username)
-                        Log.d(TAG, "onActionIntent: isAva: $isAvailable")
+                        val isAvailable = !ServiceLocator.authRepository.doesUserExist(username)
                         _state.update { currentState ->
                             currentState.copy(
                                 usernameAvailable = isAvailable

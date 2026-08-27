@@ -9,7 +9,7 @@ import kotlinx.coroutines.tasks.await
 
 interface AuthRepository {
     fun isUserSignedIn(): Boolean
-    suspend fun isUsernameAvailable(rawUsername: String): Boolean
+    suspend fun doesUserExist(rawUsername: String): Boolean
     suspend fun addUsername(rawUsername: String, uid: String): AuthResult
     suspend fun onRegister(email: String, password: String): AuthResult
     suspend fun onLogin(email: String, password: String): AuthResult
@@ -25,7 +25,7 @@ class AuthRepositoryImp(
         return currentUser != null
     }
 
-    override suspend fun isUsernameAvailable(rawUsername: String): Boolean {
+    override suspend fun doesUserExist(rawUsername: String): Boolean {
         val cleanUsername = rawUsername.trim().lowercase()
 
         return try {

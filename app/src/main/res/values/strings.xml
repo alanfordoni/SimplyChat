@@ -14,4 +14,9 @@
     <string name="error_confirm_password">Passwords don\'t match.</string>
     <string name="or_register">or Register</string>
     <string name="or_login">or Login</string>
+<!-- Chat -->
+    <string name="label_search_user">Search User</string>
+    <string name="error_username_search_too_short">Username has 5 characters minimum.</string>
+    <string name="button_open_chat">Open Chat</string>
+
 </resources>

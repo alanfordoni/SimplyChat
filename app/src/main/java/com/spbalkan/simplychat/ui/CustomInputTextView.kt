@@ -79,8 +79,9 @@ fun CustomInputTextView(
                 unfocusedContainerColor = Color.White,
                 focusedContainerColor = Color.White,
                 errorContainerColor = Color.White,
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent
+                focusedBorderColor = Color.Blue,
+                unfocusedBorderColor = Color.Gray,
+                errorBorderColor = Color.Red,
             ),
             singleLine = minLines == 1,
             minLines = minLines,
