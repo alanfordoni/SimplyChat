@@ -24,6 +24,34 @@ class RegisterViewModel : ViewModel() {
 
     fun onActionIntent(action: ActionIntent) {
         when (action) {
+            is ActionIntent.OnUsernameChange -> {
+                val username = action.username
+                _state.update { currentState ->
+                    currentState.copy(
+                        username = username,
+                        usernameAvailable = false
+                    )
+                }
+
+                if (username.length > 4) {
+                    viewModelScope.launch {
+                        val isAvailable = ServiceLocator.authRepository.isUsernameAvailable(username)
+                        Log.d(TAG, "onActionIntent: isAva: $isAvailable")
+                        _state.update { currentState ->
+                            currentState.copy(
+                                usernameAvailable = isAvailable
+                            )
+                        }
+                    }
+                } else {
+                    _state.update { currentState ->
+                        currentState.copy(
+                            usernameAvailable = false
+                        )
+                    }
+                }
+            }
+
             is ActionIntent.OnEmailChange -> {
                 val email = action.email
                 val emailError = !action.email.isValidEmail()
@@ -33,6 +61,7 @@ class RegisterViewModel : ViewModel() {
                         email = email,
                         emailError = emailError,
                         registerEnabled = isRegisterEnabled(
+                            isUsernameAvailable = currentState.usernameAvailable,
                             emailError = emailError,
                             passwordError = currentState.passwordError,
                             confirmPasswordError = currentState.confirmPasswordError
@@ -51,6 +80,7 @@ class RegisterViewModel : ViewModel() {
                         passwordError = passwordError,
                         confirmPasswordError = password != currentState.confirmPassword,
                         registerEnabled = isRegisterEnabled(
+                            isUsernameAvailable = currentState.usernameAvailable,
                             emailError = currentState.emailError,
                             passwordError = passwordError,
                             confirmPasswordError = currentState.confirmPasswordError
@@ -68,6 +98,7 @@ class RegisterViewModel : ViewModel() {
                         confirmPassword = action.confirmPassword,
                         confirmPasswordError = currentState.password != action.confirmPassword,
                         registerEnabled = isRegisterEnabled(
+                            isUsernameAvailable = currentState.usernameAvailable,
                             emailError = currentState.emailError,
                             passwordError = currentState.passwordError,
                             confirmPasswordError = confirmPasswordError
@@ -83,14 +114,16 @@ class RegisterViewModel : ViewModel() {
     }
 
     private fun isRegisterEnabled(
+        isUsernameAvailable: Boolean,
         emailError: Boolean,
         passwordError: Boolean,
         confirmPasswordError: Boolean
     ): Boolean {
 
-        return !emailError &&
-                !passwordError &&
-                !confirmPasswordError
+        return isUsernameAvailable &&
+            !emailError &&
+            !passwordError &&
+            !confirmPasswordError
     }
 
     fun register() {
@@ -106,21 +139,29 @@ class RegisterViewModel : ViewModel() {
 
             when (result) {
                 is AuthResult.RegisterSuccess -> {
+                    addUsername(result.uid)
                     _eventChannel.send(RegisterEvent.Success)
                 }
 
                 is AuthResult.Error -> {
+                    _state.update { it.copy(isLoading = false) }
                     _eventChannel.send(RegisterEvent.Error(result.error))
                 }
 
                 else -> {}
             }
-
-            _state.update { it.copy(isLoading = false) }
         }
     }
 
+    suspend fun addUsername(uid: String) {
+        ServiceLocator.authRepository.addUsername(_state.value.username, uid)
+
+        _state.update { it.copy(isLoading = false) }
+    }
+
     data class RegisterState(
+        val username: String = "",
+        val usernameAvailable: Boolean = false,
         val email: String = "",
         val password: String = "",
         val confirmPassword: String = "",
@@ -131,11 +172,12 @@ class RegisterViewModel : ViewModel() {
         val registerEnabled: Boolean = false
     )
 
-    sealed class ActionIntent {
-        data class OnEmailChange(val email: String) : ActionIntent()
-        data class OnPasswordChange(val password: String) : ActionIntent()
-        data class OnConfirmPasswordChange(val confirmPassword: String) : ActionIntent()
-        data object OnRegister : ActionIntent()
+    sealed interface ActionIntent {
+        data class OnUsernameChange(val username: String) : ActionIntent
+        data class OnEmailChange(val email: String) : ActionIntent
+        data class OnPasswordChange(val password: String) : ActionIntent
+        data class OnConfirmPasswordChange(val confirmPassword: String) : ActionIntent
+        data object OnRegister : ActionIntent
     }
 
     sealed interface RegisterEvent {

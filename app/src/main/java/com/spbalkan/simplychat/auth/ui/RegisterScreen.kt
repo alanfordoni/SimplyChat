@@ -95,6 +95,7 @@ fun RegisterScreenContent(
         }
     ) { paddingValues ->
 
+        var isUsernameDirty by rememberSaveable { mutableStateOf(false) }
         var isEmailDirty by rememberSaveable { mutableStateOf(false) }
         var isPasswordDirty by rememberSaveable { mutableStateOf(false) }
         var isConfirmPasswordDirty by rememberSaveable { mutableStateOf(false) }
@@ -108,7 +109,19 @@ fun RegisterScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CustomInputTextView(
-                labelText = stringResource(R.string.label_email_),
+                labelText = stringResource(R.string.label_username),
+                inputText = state.username,
+                errorText = stringResource(R.string.error_username_not_valid),
+                isError = !state.usernameAvailable,
+                isDirty = isUsernameDirty,
+                onInputChanged = {
+                    onAction(RegisterViewModel.ActionIntent.OnUsernameChange(it))
+                    if (!isUsernameDirty) isUsernameDirty = true
+                }
+            )
+
+            CustomInputTextView(
+                labelText = stringResource(R.string.label_email),
                 inputText = state.email,
                 errorText = stringResource(R.string.error_email_not_valid),
                 isError = state.emailError,

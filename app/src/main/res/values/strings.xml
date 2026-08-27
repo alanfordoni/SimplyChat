@@ -4,9 +4,11 @@
 <!--  Auth  -->
     <string name="register">Register</string>
     <string name="login">Login</string>
-    <string name="label_email_">Email</string>
+    <string name="label_username">Username</string>
+    <string name="label_email">Email</string>
     <string name="label_password">Password</string>
     <string name="label_confirm_password">Confirm Password</string>
+    <string name="error_username_not_valid">This username is not available.</string>
     <string name="error_email_not_valid">Please enter a valid email address.</string>
     <string name="error_password_not_valid">Please enter a valid password.</string>
     <string name="error_confirm_password">Passwords don\'t match.</string>

@@ -112,7 +112,7 @@ fun LoginScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CustomInputTextView(
-                labelText = stringResource(R.string.label_email_),
+                labelText = stringResource(R.string.label_email),
                 inputText = state.email,
                 errorText = stringResource(R.string.error_email_not_valid),
                 isError = state.emailError,
