@@ -1,19 +1,32 @@
 package com.spbalkan.simplychat.chat.ui
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
@@ -23,7 +36,7 @@ import com.spbalkan.simplychat.chat.viewmodels.ConversationsListViewModel
 fun ConversationsListScreen(
     viewModel: ConversationsListViewModel = viewModel(),
     onChatSelected: (chatId: String) -> Unit,
-    onStartNewChat: (username: String) -> Unit,
+    onStartNewChat: (username: String, uid: String) -> Unit,
     onLogout: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -39,8 +52,11 @@ fun ConversationsListScreen(
 
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
-            if (event is ConversationsListViewModel.ConversationsEvents.OpenNewChat) {
-                onStartNewChat(event.username)
+            if (event is ConversationsListViewModel.ConversationsEvents.EventOpenNewChat) {
+                onStartNewChat(
+                    event.username,
+                    event.uid
+                )
             }
         }
     }
@@ -69,7 +85,9 @@ fun ConversationsListScreenContent(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = {},
+                title = {
+                    Text(text = stringResource(R.string.label_chats))
+                },
                 actions = {
                     IconButton(
                         onClick = {
@@ -87,9 +105,28 @@ fun ConversationsListScreenContent(
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+            ,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // todo
+            itemsIndexed(
+                items = state.conversations,
+                key = { index, chat -> chat.id }
+            ) { index, conversation ->
+                ConversationItem(
+                    username = conversation.otherUser.username,
+                    onClick = { onAction(ConversationsListViewModel.ActionIntent.OnOpenChat(conversationUser = conversation.otherUser)) }
+                )
+
+                if (index < state.conversations.lastIndex) {
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+                }
+            }
         }
 
         FloatingActionButton(
@@ -105,13 +142,40 @@ fun ConversationsListScreenContent(
 
         if (state.showNewChatDialog) {
             NewChatDialog(
-                onOpenNewChat = {
-
+                onOpenNewChat = { username, uid ->
+                    onAction(ConversationsListViewModel.ActionIntent.OnOpenNewChat(
+                        username = username,
+                        uid = uid
+                    ))
                 },
                 onDismiss = {
                     onAction(ConversationsListViewModel.ActionIntent.OnNewChatDismiss)
                 }
             )
         }
+    }
+}
+
+@Composable
+fun ConversationItem(
+    username: String,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .clickable(
+                enabled = true,
+                onClick = {
+                    onClick()
+                }
+            )
+            .padding(all = 16.dp)
+    ) {
+        Text(
+            text = username,
+            fontSize = TextUnit(24f, TextUnitType.Sp)
+        )
     }
 }

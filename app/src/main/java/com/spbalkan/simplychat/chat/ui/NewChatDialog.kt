@@ -35,7 +35,7 @@ import com.spbalkan.simplychat.ui.CustomInputTextView
 @Composable
 fun NewChatDialog(
     viewModel: NewChatDialogViewModel = viewModel(),
-    onOpenNewChat: (username: String) -> Unit,
+    onOpenNewChat: (username: String, uid: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -46,8 +46,13 @@ fun NewChatDialog(
     )
 
     LaunchedEffect(Unit) {
-        viewModel.eventDoesUserExist.collect { username ->
-            onOpenNewChat(username)
+        viewModel.eventDoesUserExist.collect { event ->
+            if (event is NewChatDialogViewModel.NewChatEvents.EventUserFound) {
+                onOpenNewChat(
+                    event.username,
+                    event.uid
+                )
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spbalkan.simplychat.ServiceLocator
+import com.spbalkan.simplychat.chat.ChatResult
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,7 @@ class NewChatDialogViewModel : ViewModel() {
     private val _state = MutableStateFlow(NewChatState())
     val state = _state.asStateFlow()
 
-    private val _eventChannel = Channel<String>(Channel.BUFFERED)
+    private val _eventChannel = Channel<NewChatEvents>(Channel.BUFFERED)
     val eventDoesUserExist = _eventChannel.receiveAsFlow()
 
     fun onAction(action: ActionIntent) {
@@ -26,7 +27,7 @@ class NewChatDialogViewModel : ViewModel() {
                 _state.update { currentState ->
                     currentState.copy(
                         searchText = searchText,
-                        isSearchTextError = searchText.length > 4
+                        isSearchTextError = searchText.length < 5
                     )
                 }
             }
@@ -41,13 +42,21 @@ class NewChatDialogViewModel : ViewModel() {
     private fun checkUser() {
         viewModelScope.launch {
             val searchText = _state.value.searchText
-            val doesUserExist = ServiceLocator.authRepository.doesUserExist(searchText)
-            _state.update { currentState -> currentState.copy(isLoading = false) }
+            val result = ServiceLocator.chatRepository.getUserByUsername(searchText)
 
-            if (doesUserExist) {
-                _eventChannel.send(searchText)
-            } else {
-                // todo
+            _state.update { currentState -> currentState.copy(isLoading = false) }
+            when (result) {
+                is ChatResult.UserFound -> {
+                    Log.d(TAG, "checkUser: username exist")
+                    _eventChannel.send(NewChatEvents.EventUserFound(
+                        username = result.username,
+                        uid = result.userId
+                    ))
+                }
+
+                else -> {
+                    // TODO:
+                }
             }
         }
     }
@@ -61,5 +70,13 @@ class NewChatDialogViewModel : ViewModel() {
     sealed interface ActionIntent {
         data class OnSearchTextChange(val searchText: String) : ActionIntent
         data object OnCheckIfUserExist : ActionIntent
+    }
+
+    sealed interface NewChatEvents {
+        data class EventUserFound(val username: String, val uid: String) : NewChatEvents
+    }
+
+    companion object {
+        const val TAG = "zzNewChatDiagVM"
     }
 }
