@@ -28,18 +28,9 @@ class ConversationsListViewModel : ViewModel() {
             val result = ServiceLocator.chatRepository.getAllConversations()
             when (result) {
                 is ChatResult.AllConversationsSuccess -> {
-                    val conversations = result.list.map { convoDTO ->
-                        Conversation(
-                            id = convoDTO.id,
-                            participants = convoDTO.participants,
-                            otherUser = getOtherUserUsername(convoDTO.participants),
-                            lastUpdated = convoDTO.lastUpdated
-                        )
-                    }
-
                     _state.update { currentState ->
                         currentState.copy(
-                            conversations = conversations
+                            conversations = result.list
                         )
                     }
                 }
@@ -75,10 +66,6 @@ class ConversationsListViewModel : ViewModel() {
                 }
             }
 
-            is ActionIntent.OnOpenChat -> {
-                // TODO:
-            }
-
             is ActionIntent.OnLogout -> {
                 Firebase.auth.signOut()
             }
@@ -93,16 +80,7 @@ class ConversationsListViewModel : ViewModel() {
         }
     }
 
-    private fun getOtherUserUsername(participants: Map<String, String>): ConversationUser {
-        val myUid = ServiceLocator.authRepository.getUserAuthId()
-        for (user in participants) {
-            if (user.key != myUid) return ConversationUser(
-                uid = user.key,
-                username = user.value
-            )
-        }
-        throw RuntimeException("$TAG getOtherUserUsername")
-    }
+
 
     data class ConversationsState(
         val showNewChatDialog: Boolean = false,
@@ -112,7 +90,6 @@ class ConversationsListViewModel : ViewModel() {
     sealed interface ActionIntent {
         data object OnSearchNewChat : ActionIntent
         data class OnOpenNewChat(val username: String, val uid: String) : ActionIntent
-        data class OnOpenChat(val conversationUser: ConversationUser) : ActionIntent
         data object OnLogout : ActionIntent
         data object OnNewChatDismiss : ActionIntent
     }

@@ -35,7 +35,7 @@ import com.spbalkan.simplychat.chat.viewmodels.ConversationsListViewModel
 @Composable
 fun ConversationsListScreen(
     viewModel: ConversationsListViewModel = viewModel(),
-    onChatSelected: (chatId: String) -> Unit,
+    onChatSelected: (chatId: String, username: String, uid: String) -> Unit,
     onStartNewChat: (username: String, uid: String) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -44,6 +44,12 @@ fun ConversationsListScreen(
     ConversationsListScreenContent(
         state = state,
         onAction = viewModel::onAction,
+        onOpenSelectedChat = { chatId, username, uid ->
+            onChatSelected(
+                chatId,
+                username,
+                uid)
+        },
         onLogout = {
             viewModel.onAction(ConversationsListViewModel.ActionIntent.OnLogout)
             onLogout()
@@ -67,6 +73,7 @@ fun ConversationsListScreen(
 fun ConversationsListScreenContent(
     state: ConversationsListViewModel.ConversationsState,
     onAction:(ConversationsListViewModel.ActionIntent) -> Unit,
+    onOpenSelectedChat: (String, String, String) -> Unit,
     onLogout: () -> Unit
 ) {
     Scaffold(
@@ -113,11 +120,11 @@ fun ConversationsListScreenContent(
         ) {
             itemsIndexed(
                 items = state.conversations,
-                key = { index, chat -> chat.id }
+                key = { _, chat -> chat.id }
             ) { index, conversation ->
                 ConversationItem(
                     username = conversation.otherUser.username,
-                    onClick = { onAction(ConversationsListViewModel.ActionIntent.OnOpenChat(conversationUser = conversation.otherUser)) }
+                    onClick = { onOpenSelectedChat(conversation.id, conversation.otherUser.username, conversation.otherUser.uid) }
                 )
 
                 if (index < state.conversations.lastIndex) {
