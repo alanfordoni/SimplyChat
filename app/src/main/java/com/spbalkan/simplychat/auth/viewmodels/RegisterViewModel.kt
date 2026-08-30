@@ -185,6 +185,6 @@ class RegisterViewModel : ViewModel() {
     }
 
     companion object {
-        private const val TAG = "RegisterVM"
+        private const val TAG = "zzRegisterVM"
     }
 }

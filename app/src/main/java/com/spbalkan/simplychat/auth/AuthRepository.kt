@@ -5,10 +5,12 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.spbalkan.simplychat.utils.Constants
 import kotlinx.coroutines.tasks.await
 
 interface AuthRepository {
     fun isUserSignedIn(): Boolean
+    fun getUserAuthId(): String
     suspend fun doesUserExist(rawUsername: String): Boolean
     suspend fun addUsername(rawUsername: String, uid: String): AuthResult
     suspend fun onRegister(email: String, password: String): AuthResult
@@ -25,17 +27,24 @@ class AuthRepositoryImp(
         return currentUser != null
     }
 
+    override fun getUserAuthId(): String {
+        val myUid = requireNotNull(auth.uid) {
+            "User Auth ID must not be null after Authentication"
+        }
+        return myUid
+    }
+
     override suspend fun doesUserExist(rawUsername: String): Boolean {
         val cleanUsername = rawUsername.trim().lowercase()
 
         return try {
-            val docSnapshot = firebaseDb.collection("usernames")
+            val docSnapshot = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
                 .document(cleanUsername)
                 .get()
                 .await()
 
             // Return TRUE if available (document does NOT exist)
-            !docSnapshot.exists()
+            docSnapshot.exists()
         } catch (e: Exception) {
             false
         }
@@ -62,11 +71,12 @@ class AuthRepositoryImp(
             val result = Firebase.auth
                 .createUserWithEmailAndPassword(email, password)
                 .await()
-            result.user?.uid?.let { uid ->
-                return AuthResult.RegisterSuccess(uid)
+
+            return result.user?.uid?.let { uid ->
+                AuthResult.RegisterSuccess(uid)
             } ?: run {
                 Log.e(TAG, "onRegister: error: user null")
-                return AuthResult.Error("error: user null")
+                AuthResult.Error("error: user null")
             }
 
         } catch (e: Exception) {
@@ -92,7 +102,7 @@ class AuthRepositoryImp(
     }
 
     companion object {
-        private const val TAG = "AuthRepo"
+        private const val TAG = "zzAuthRepo"
     }
 }
 
