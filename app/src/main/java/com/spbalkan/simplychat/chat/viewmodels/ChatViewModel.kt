@@ -43,6 +43,32 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
     }
 
+    fun onAction(action: ActionIntent) {
+        when (action) {
+            is ActionIntent.OnInputChange -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        inputText = action.message
+                    )
+                }
+            }
+
+            is ActionIntent.OnSendMessage -> {
+                viewModelScope.launch {
+                    ServiceLocator.chatRepository.sendMessage(
+                        message = _state.value.inputText,
+                        chatId = args.chatId,
+                    )
+
+                    _state.update { currentState ->
+                        currentState.copy(
+                            inputText = ""
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     data class ChatState(
         override val inputText: String = "",

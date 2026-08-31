@@ -9,7 +9,6 @@ import com.spbalkan.simplychat.Screen
 import com.spbalkan.simplychat.ServiceLocator
 import com.spbalkan.simplychat.chat.ChatUiState
 import com.spbalkan.simplychat.chat.models.Message
-import com.spbalkan.simplychat.chat.models.MessageDTO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -41,9 +40,9 @@ class NewChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         }
     }
 
-    fun onAction(action: ActionIntent) {
+    fun onAction(action: ChatViewModel.ActionIntent) {
         when (action) {
-            is ActionIntent.OnInputChange -> {
+            is ChatViewModel.ActionIntent.OnInputChange -> {
                 _state.update { currentState ->
                     currentState.copy(
                         inputText = action.message
@@ -51,13 +50,13 @@ class NewChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
                 }
             }
 
-            is ActionIntent.OnSendMessage -> {
+            is ChatViewModel.ActionIntent.OnSendMessage -> {
                 viewModelScope.launch {
-                    ServiceLocator.chatRepository.sendMessage(
+                    /*ServiceLocator.chatRepository.sendMessage(
                         message = _state.value.inputText,
                         username = args.username,
                         userId = args.uid
-                    )
+                    )*/
                 }
             }
         }
@@ -69,9 +68,4 @@ class NewChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         override val dataError: Boolean = false,
         override val lastUpdated: Timestamp? = null
     ) : ChatUiState
-
-    sealed interface ActionIntent {
-        data class OnInputChange(val message: String) : ActionIntent
-        data object OnSendMessage : ActionIntent
-    }
 }

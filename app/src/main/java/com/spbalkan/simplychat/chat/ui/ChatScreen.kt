@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
@@ -35,6 +36,7 @@ import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.chat.viewmodels.ChatViewModel
 import com.spbalkan.simplychat.chat.viewmodels.NewChatViewModel
 import com.spbalkan.simplychat.ui.CustomInputTextView
+import com.spbalkan.simplychat.ui.theme.Blue40
 
 // New conversation
 @Composable
@@ -45,6 +47,7 @@ fun NewChatScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     ChatScreenContent(
         state = state,
+        onAction = viewModel::onAction,
         username = viewModel.args.username
     )
 }
@@ -58,6 +61,7 @@ fun ChatScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     ChatScreenContent(
         state = state,
+        onAction = viewModel::onAction,
         username = viewModel.args.username
     )
 }
@@ -66,8 +70,11 @@ fun ChatScreen(
 @Composable
 fun ChatScreenContent(
     state: ChatUiState,
+    onAction: (ChatViewModel.ActionIntent) -> Unit,
     username: String
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -87,13 +94,14 @@ fun ChatScreenContent(
                     labelText = null,
                     inputText = state.inputText,
                     onInputChanged = {
-
+                        onAction(ChatViewModel.ActionIntent.OnInputChange(it))
                     }
                 )
 
                 IconButton(
                     onClick = {
-
+                        onAction(ChatViewModel.ActionIntent.OnSendMessage)
+                        keyboardController?.hide()
                     }
                 ) {
                     Icon(
@@ -107,8 +115,9 @@ fun ChatScreenContent(
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            reverseLayout = true
         ) {
             itemsIndexed(
                 items = state.messagesList,
@@ -128,7 +137,6 @@ fun MessageItem(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(all = 16.dp)
     ) {
         Box(
             modifier = Modifier
@@ -158,7 +166,7 @@ fun MyMessage(
 ) {
     Text(
         modifier = modifier
-            .padding(12.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         text = text,
         fontSize = TextUnit(16f, TextUnitType.Sp)
     )
@@ -172,11 +180,12 @@ fun ReceivedMessage(
     Text(
         modifier = modifier
             .background(
-                color = Color.Blue,
+                color = Blue40,
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(12.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         text = text,
+        color = Color.White,
         fontSize = TextUnit(16f, TextUnitType.Sp)
     )
 }
