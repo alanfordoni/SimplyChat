@@ -12,11 +12,15 @@ import com.spbalkan.simplychat.chat.models.ConversationUser
 import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.chat.models.MessageDTO
 import com.spbalkan.simplychat.utils.Constants
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlin.collections.map
 
 interface ChatRepository {
     suspend fun getAllConversations(): ChatResult
-    suspend fun getChatMessages(chatId: String, userId: String): ChatResult
+    fun listenToMessages(chatId: String, userId: String): Flow<ChatResult>
     suspend fun getUserByUsername(username: String): ChatResult
     suspend fun getUserByUid(userId: String): ChatResult
     suspend fun createNewChat(username: String, userId: String): ChatResult
@@ -66,34 +70,32 @@ class ChatRepositoryImp(
         )
     }
 
-    override suspend fun getChatMessages(chatId: String, userId: String): ChatResult {
-        return try {
-            val queryPath = "${Constants.DB_CHATS_COLLECTION}/$chatId/${Constants.DB_MESSAGES_COLLECTION}"
+    override fun listenToMessages(chatId: String, userId: String): Flow<ChatResult> = callbackFlow {
 
-            val userDoc = firebaseDb.collection(queryPath)
-                .orderBy(Constants.DB_TIMESTAMP, Query.Direction.DESCENDING)
-                .get()
-                .await()
+        val listenerRegistration = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
+            .document(chatId)
+            .collection(Constants.DB_MESSAGES_COLLECTION)
+            .orderBy(Constants.DB_TIMESTAMP, Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    trySend(ChatResult.Error(error.localizedMessage ?: "get messages error"))
+                }
 
-            val list = userDoc.documents.mapNotNull { documentSnapshot ->
-                documentSnapshot.toObject(MessageDTO::class.java)
+                if (snapshot != null) {
+                    val msgList = snapshot.toObjects(MessageDTO::class.java).map { msgDTO ->
+                        Message(
+                            id = msgDTO.id,
+                            text = msgDTO.text,
+                            isReceivedMessage = msgDTO.senderId == userId,
+                            timestamp = msgDTO.timestamp
+                        )
+                    }
+                    trySend(ChatResult.ChatMessagesSuccess(msgList))
+                }
             }
-            val domainList = list.map { msgDTO ->
-                Message(
-                    id = msgDTO.id,
-                    text = msgDTO.text,
-                    isReceivedMessage = msgDTO.senderId == userId,
-                    timestamp = msgDTO.timestamp
-                )
-            }
 
-            ChatResult.ChatMessagesSuccess(domainList)
-
-        } catch (e: Exception) {
-            val errorMsg = e.localizedMessage ?: "get Chat Messages failed"
-            Log.e(TAG, "getChatMessages: Error: $errorMsg")
-            ChatResult.Error(errorMsg)
-        }
+        awaitClose { listenerRegistration.remove() }
     }
 
     override suspend fun sendMessage(message: String, chatId: String): ChatResult {
@@ -102,9 +104,9 @@ class ChatRepositoryImp(
             val myUid = auth.currentUser!!.uid
 
             val chatData = hashMapOf(
-                "senderId" to myUid,
-                "text" to message,
-                "timestamp" to FieldValue.serverTimestamp()
+                Constants.DB_SENDER_ID to myUid,
+                Constants.DB_TEXT to message,
+                Constants.DB_TIMESTAMP to FieldValue.serverTimestamp()
             )
 
             firebaseDb.collection(queryPath)
@@ -120,7 +122,6 @@ class ChatRepositoryImp(
             ChatResult.Error(errorMsg)
         }
     }
-
 
     override suspend fun getUserByUsername(username: String): ChatResult {
 
@@ -186,8 +187,8 @@ class ChatRepositoryImp(
             )
 
             val chatData = hashMapOf(
-                "lastUpdated" to FieldValue.serverTimestamp(),
-                "participants" to participants
+                Constants.DB_LAST_UPDATED to FieldValue.serverTimestamp(),
+                Constants.DB_PARTICIPANTS to participants
             )
 
             firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
@@ -195,7 +196,8 @@ class ChatRepositoryImp(
                 .set(chatData)
                 .await()
 
-            ChatResult.ChatCreated
+            ChatResult.ChatCreated(docName)
+
         } catch (e: Exception) {
             Log.e(TAG, "sendMessage: error: ${e.localizedMessage}")
             val errorMsg = e.localizedMessage ?: "send message failed"
@@ -212,7 +214,7 @@ class ChatRepositoryImp(
 sealed class ChatResult {
     data class UserFound(val username: String, val userId: String) : ChatResult()
     data object MessageSent : ChatResult()
-    data object ChatCreated : ChatResult()
+    data class ChatCreated(val chatId: String) : ChatResult()
     data class AllConversationsSuccess(val list: List<Conversation>) : ChatResult()
     data class ChatMessagesSuccess(val list: List<Message>) : ChatResult()
     data class Error(val error: String) : ChatResult()

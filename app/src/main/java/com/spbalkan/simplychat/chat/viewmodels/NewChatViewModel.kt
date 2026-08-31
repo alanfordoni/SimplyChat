@@ -4,68 +4,99 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.google.firebase.Timestamp
 import com.spbalkan.simplychat.Screen
 import com.spbalkan.simplychat.ServiceLocator
-import com.spbalkan.simplychat.chat.ChatUiState
-import com.spbalkan.simplychat.chat.models.Message
+import com.spbalkan.simplychat.chat.ChatResult
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class NewChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
-    val args = savedStateHandle.toRoute<Screen.NewChat>()
+    val args = savedStateHandle.toRoute<Screen.Chat>()
+    private val _inputState = MutableStateFlow("")
+    val inputState = _inputState.asStateFlow()
+
+    private val _messagesState = MutableStateFlow(ChatViewModel.MessagesState())
+    val messagesState = _messagesState.asStateFlow()
 
     init {
         createChat(userId = args.uid, username = args.username)
     }
 
-    private val _state = MutableStateFlow(ChatState())
-    val state = _state.asStateFlow()
-
     fun createChat(username: String, userId: String) {
         viewModelScope.launch {
-            ServiceLocator.chatRepository.createNewChat(
+            val result = ServiceLocator.chatRepository.createNewChat(
                 username = username,
                 userId = userId
             )
+
+            when (result) {
+                is ChatResult.ChatCreated -> {
+                    setMessagesListener(result.chatId)
+                }
+
+                is ChatResult.Error -> {
+                    // TODO:
+                }
+
+                else -> {}
+            }
         }
     }
 
-    fun getUser(username: String) {
-        viewModelScope.launch {
-            ServiceLocator.chatRepository.getUserByUsername(username)
-        }
+    fun setMessagesListener(chatId: String) {
+
+        ServiceLocator.chatRepository
+            .listenToMessages(chatId, args.uid)
+            .map { result ->
+                when (result) {
+                    is ChatResult.ChatMessagesSuccess -> {
+                        _messagesState.update { messagesState ->
+                            messagesState.copy(
+                                messagesList = result.list,
+                                error = ""
+                            )
+                        }
+                    }
+
+                    is ChatResult.Error -> {
+                        _messagesState.update { messagesState ->
+                            messagesState.copy(
+                                error = result.error
+                            )
+                        }
+                    }
+
+                    else -> {}
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = ChatViewModel.MessagesState()
+            )
     }
 
     fun onAction(action: ChatViewModel.ActionIntent) {
         when (action) {
             is ChatViewModel.ActionIntent.OnInputChange -> {
-                _state.update { currentState ->
-                    currentState.copy(
-                        inputText = action.message
-                    )
-                }
+                _inputState.update { action.messageText }
             }
 
             is ChatViewModel.ActionIntent.OnSendMessage -> {
                 viewModelScope.launch {
-                    /*ServiceLocator.chatRepository.sendMessage(
-                        message = _state.value.inputText,
-                        username = args.username,
-                        userId = args.uid
-                    )*/
+                    ServiceLocator.chatRepository.sendMessage(
+                        message = _inputState.value,
+                        chatId = args.chatId,
+                    )
+                    _inputState.update { "" }
                 }
             }
         }
     }
-
-    data class ChatState(
-        override val inputText: String = "",
-        override val messagesList: List<Message> = emptyList(),
-        override val dataError: Boolean = false,
-        override val lastUpdated: Timestamp? = null
-    ) : ChatUiState
 }

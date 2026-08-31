@@ -44,9 +44,12 @@ fun NewChatScreen(
     viewModel: NewChatViewModel = viewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.inputState.collectAsStateWithLifecycle()
+    val messagesState by viewModel.messagesState.collectAsStateWithLifecycle()
+
     ChatScreenContent(
-        state = state,
+        inputState = state,
+        messagesState = messagesState,
         onAction = viewModel::onAction,
         username = viewModel.args.username
     )
@@ -58,9 +61,12 @@ fun ChatScreen(
     viewModel: ChatViewModel = viewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.inputState.collectAsStateWithLifecycle()
+    val messagesState by viewModel.messagesState.collectAsStateWithLifecycle()
+
     ChatScreenContent(
-        state = state,
+        inputState = state,
+        messagesState = messagesState,
         onAction = viewModel::onAction,
         username = viewModel.args.username
     )
@@ -69,7 +75,8 @@ fun ChatScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreenContent(
-    state: ChatUiState,
+    inputState: String,
+    messagesState: ChatViewModel.MessagesState,
     onAction: (ChatViewModel.ActionIntent) -> Unit,
     username: String
 ) {
@@ -92,7 +99,7 @@ fun ChatScreenContent(
                     modifier = Modifier
                         .weight(1f),
                     labelText = null,
-                    inputText = state.inputText,
+                    inputText = inputState,
                     onInputChanged = {
                         onAction(ChatViewModel.ActionIntent.OnInputChange(it))
                     }
@@ -120,7 +127,7 @@ fun ChatScreenContent(
             reverseLayout = true
         ) {
             itemsIndexed(
-                items = state.messagesList,
+                items = messagesState.messagesList,
                 key = { _, message -> message.id }
             ) { index, message ->
                 MessageItem(message)
