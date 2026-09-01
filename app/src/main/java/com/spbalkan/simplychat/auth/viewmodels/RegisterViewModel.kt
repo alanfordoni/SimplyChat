@@ -38,7 +38,13 @@ class RegisterViewModel : ViewModel() {
                         val isAvailable = !ServiceLocator.authRepository.doesUserExist(username)
                         _state.update { currentState ->
                             currentState.copy(
-                                usernameAvailable = isAvailable
+                                usernameAvailable = isAvailable,
+                                registerEnabled = isRegisterEnabled(
+                                    isUsernameAvailable = isAvailable,
+                                    emailError = currentState.emailError,
+                                    passwordError = currentState.passwordError,
+                                    confirmPasswordError = currentState.confirmPasswordError
+                                )
                             )
                         }
                     }

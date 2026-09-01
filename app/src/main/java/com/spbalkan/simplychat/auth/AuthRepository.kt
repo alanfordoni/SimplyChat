@@ -45,6 +45,7 @@ class AuthRepositoryImp(
 
             // Return TRUE if available (document does NOT exist)
             docSnapshot.exists()
+
         } catch (e: Exception) {
             false
         }

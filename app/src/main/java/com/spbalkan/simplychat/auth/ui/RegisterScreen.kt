@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -112,7 +113,7 @@ fun RegisterScreenContent(
                 labelText = stringResource(R.string.label_username),
                 inputText = state.username,
                 errorText = stringResource(R.string.error_username_not_valid),
-                isError = !state.usernameAvailable,
+                isError = !state.usernameAvailable && isUsernameDirty, // todo
                 isDirty = isUsernameDirty,
                 onInputChanged = {
                     onAction(RegisterViewModel.ActionIntent.OnUsernameChange(it))
@@ -150,6 +151,7 @@ fun RegisterScreenContent(
                 errorText = stringResource(R.string.error_confirm_password),
                 isError = state.confirmPasswordError,
                 isDirty = isConfirmPasswordDirty,
+                imeAction = ImeAction.Done,
                 onPasswordChange = {
                     onAction(RegisterViewModel.ActionIntent.OnConfirmPasswordChange(it))
                     if (!isConfirmPasswordDirty) isConfirmPasswordDirty = true
