@@ -28,10 +28,10 @@ class AuthRepositoryImp(
     }
 
     override fun getUserAuthId(): String {
-        val myUid = requireNotNull(auth.uid) {
+        val userId = requireNotNull(auth.uid) {
             "User Auth ID must not be null after Authentication"
         }
-        return myUid
+        return userId
     }
 
     override suspend fun doesUserExist(rawUsername: String): Boolean {
@@ -54,11 +54,15 @@ class AuthRepositoryImp(
     override suspend fun addUsername(rawUsername: String, uid: String): AuthResult {
         val cleanUsername = rawUsername.trim().lowercase()
         val data = hashMapOf(
-            "uid" to uid
+            Constants.DB_UID to uid
         )
         try {
-            firebaseDb.collection("usernames").document(cleanUsername).set(data).await()
+            firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
+                .document(cleanUsername)
+                .set(data)
+                .await()
             return AuthResult.AddUsernameSuccess
+
         } catch (e: Exception) {
             Log.e(TAG, "checkUsername: error: ${e.localizedMessage}")
             val errorMessage = e.localizedMessage ?: "Authentication failed."
@@ -69,7 +73,7 @@ class AuthRepositoryImp(
     override suspend fun onRegister(email: String, password: String): AuthResult {
 
         try {
-            val result = Firebase.auth
+            val result = auth
                 .createUserWithEmailAndPassword(email, password)
                 .await()
 
