@@ -43,10 +43,10 @@ class AuthRepositoryImp(
                 .get()
                 .await()
 
-            // Return TRUE if available (document does NOT exist)
             docSnapshot.exists()
 
         } catch (e: Exception) {
+            Log.e(TAG, "doesUserExist: Error: ${e.message}")
             false
         }
     }
@@ -64,8 +64,8 @@ class AuthRepositoryImp(
             return AuthResult.AddUsernameSuccess
 
         } catch (e: Exception) {
-            Log.e(TAG, "checkUsername: error: ${e.localizedMessage}")
-            val errorMessage = e.localizedMessage ?: "Authentication failed."
+            Log.e(TAG, "checkUsername: error: ${e.message}")
+            val errorMessage = e.message ?: "Authentication failed."
             return AuthResult.Error(errorMessage)
         }
     }
@@ -85,8 +85,8 @@ class AuthRepositoryImp(
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "onRegister: error: ${e.localizedMessage}")
-            val errorMessage = e.localizedMessage ?: "Authentication failed."
+            Log.e(TAG, "onRegister: error: ${e.message}")
+            val errorMessage = e.message ?: "Authentication failed."
             return AuthResult.Error(errorMessage)
         }
     }
@@ -100,7 +100,7 @@ class AuthRepositoryImp(
             return AuthResult.LoginSuccess
 
         } catch (e: Exception) {
-            val errorMessage = e.localizedMessage ?: "Authentication failed."
+            val errorMessage = e.message ?: "Authentication failed."
             Log.e(TAG, "onLogin: error: $errorMessage")
             return AuthResult.Error(errorMessage)
         }

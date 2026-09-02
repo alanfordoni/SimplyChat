@@ -57,7 +57,7 @@ class ChatRepositoryImp(
             ChatResult.AllConversationsSuccess(domainList)
 
         } catch (e: Exception) {
-            val errorMsg = e.localizedMessage ?: "get All Conversations failed"
+            val errorMsg = e.message ?: "get All Conversations failed"
             Log.e(TAG, "getAllConversations: Error: $errorMsg")
             ChatResult.Error(errorMsg)
         }
@@ -85,7 +85,7 @@ class ChatRepositoryImp(
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
-                    trySend(ChatResult.Error(error.localizedMessage ?: "get messages error"))
+                    trySend(ChatResult.Error(error.message ?: "get messages error"))
                 }
 
                 if (snapshot != null) {
@@ -122,8 +122,8 @@ class ChatRepositoryImp(
 
             ChatResult.MessageSent
         } catch (e: Exception) {
-            Log.e(TAG, "sendMessage: error: ${e.localizedMessage}")
-            val errorMsg = e.localizedMessage ?: "send message failed"
+            Log.e(TAG, "sendMessage: error: ${e.message}")
+            val errorMsg = e.message ?: "send message failed"
 
             ChatResult.Error(errorMsg)
         }
@@ -144,8 +144,8 @@ class ChatRepositoryImp(
             ChatResult.UserFound(username, uid!!)
 
         } catch (e: Exception) {
-            Log.e(TAG, "getUserByUsername: error: ${e.localizedMessage}")
-            val errorMessage = e.localizedMessage ?: "get user failed"
+            Log.e(TAG, "getUserByUsername: error: ${e.message}")
+            val errorMessage = e.message ?: "get user failed"
             ChatResult.Error(errorMessage)
         }
     }
@@ -163,8 +163,8 @@ class ChatRepositoryImp(
             return username
 
         } catch (e: Exception) {
-            Log.e(TAG, "getUserByUid: error: ${e.localizedMessage}")
-            throw IllegalArgumentException(e.localizedMessage)
+            Log.e(TAG, "getUserByUid: error: ${e.message}")
+            throw IllegalArgumentException(e.message)
         }
     }
 
@@ -191,7 +191,7 @@ class ChatRepositoryImp(
             ChatResult.ChatCreated(chatRef.id)
 
         } catch (e: Exception) {
-            Log.e(TAG, "sendMessage: error: ${e.localizedMessage}")
+            Log.e(TAG, "sendMessage: error: ${e.message}")
             ChatResult.Error(e.message)
         }
     }

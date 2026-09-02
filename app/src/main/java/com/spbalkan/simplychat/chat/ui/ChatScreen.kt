@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,7 @@ import com.spbalkan.simplychat.chat.viewmodels.ChatViewModel
 import com.spbalkan.simplychat.ui.CustomInputTextView
 import com.spbalkan.simplychat.ui.theme.Blue40
 import com.spbalkan.simplychat.ui.theme.BlueGrey80
+import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 
 // TODO: to add:
 // - dynamic vertical separation between messages of different senders
@@ -168,12 +170,11 @@ fun MyMessage(
         modifier = modifier
             .wrapContentWidth()
             .padding(
-                start = 48.dp,
-                end = 12.dp
+                start = 48.dp
             )
     ) {
         Text(
-            modifier = modifier
+            modifier = Modifier
                 .background(
                     color = BlueGrey80,
                     shape = RoundedCornerShape(12.dp)
@@ -196,12 +197,11 @@ fun ReceivedMessage(
         modifier = modifier
             .wrapContentWidth()
             .padding(
-                start = 12.dp,
                 end = 48.dp
             )
     ) {
         Text(
-            modifier = modifier
+            modifier = Modifier
                 .background(
                     color = Blue40,
                     shape = RoundedCornerShape(12.dp)
@@ -213,4 +213,29 @@ fun ReceivedMessage(
         )
     }
 
+}
+
+@Preview
+@Composable
+fun ChatScreenContentPreview() {
+    SimplyChatTheme {
+        val messagesState = ChatViewModel.MessagesState(
+            messagesList = listOf(
+                Message(
+                    id = "sdsd",
+                    text = "Ich habe viel Sport gemacht, denn ich hatte stressig Woche",
+                    isReceivedMessage = false,
+                    timestamp = null
+                )
+            )
+        )
+
+        ChatScreenContent(
+            inputState = "",
+            messagesState = messagesState,
+            onAction = {},
+            username = "Chatty 55",
+            onNavigateBack = {}
+        )
+    }
 }
