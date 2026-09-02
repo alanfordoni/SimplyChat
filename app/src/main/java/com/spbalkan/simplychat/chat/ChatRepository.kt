@@ -19,11 +19,12 @@ import kotlinx.coroutines.tasks.await
 import kotlin.collections.map
 
 interface ChatRepository {
-    suspend fun getAllConversations(): ChatResult
-    fun listenToMessages(chatId: String, userId: String): Flow<ChatResult>
-    suspend fun getUserByUsername(username: String): ChatResult
-    suspend fun getUserByUid(userId: String): ChatResult
-    suspend fun createNewChat(username: String, userId: String): ChatResult
+    suspend fun getUserConversations(): ChatResult
+    fun listenToMessages(chatId: String): Flow<ChatResult>
+    // find user by username keyword
+    suspend fun findUserByKeyword(keyword: String): ChatResult
+    suspend fun getUserByUid(userId: String): String
+    suspend fun createNewChat(otherUsername: String, otherUserId: String): ChatResult
     suspend fun sendMessage(message: String, chatId: String): ChatResult
 }
 
@@ -31,13 +32,17 @@ class ChatRepositoryImp(
     private val auth: FirebaseAuth,
     private val firebaseDb: FirebaseFirestore
 ) : ChatRepository {
-    override suspend fun getAllConversations(): ChatResult {
+    override suspend fun getUserConversations(): ChatResult {
+
         return try {
-            val userDoc = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
+            val userId = ServiceLocator.authRepository.getUserAuthId()
+            val userChats = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
+                .whereNotEqualTo("${Constants.DB_PARTICIPANTS}.$userId", null)
                 .get()
                 .await()
 
-            val list = userDoc.documents.mapNotNull { documentSnapshot ->
+            Log.d(TAG, "getUserConversations: snapshot size: ${userChats.size()}")
+            val list = userChats.documents.mapNotNull { documentSnapshot ->
                 documentSnapshot.toObject(ConversationDTO::class.java)
             }
 
@@ -45,7 +50,7 @@ class ChatRepositoryImp(
                 Conversation(
                     id = convoDTO.id,
                     participants = convoDTO.participants,
-                    otherUser = getOtherUserUsername(convoDTO.participants),
+                    otherUser = getOtherUser(convoDTO.participants),
                     lastUpdated = convoDTO.lastUpdated
                 )
             }
@@ -58,10 +63,10 @@ class ChatRepositoryImp(
         }
     }
 
-    private fun getOtherUserUsername(participants: Map<String, String>): ConversationUser {
-        val myUid = ServiceLocator.authRepository.getUserAuthId()
-        val (otherUid, otherUsername) = requireNotNull(participants.entries.firstOrNull { it.key != myUid }) {
-            "Participants map must contain at least one other user besides $myUid."
+    private fun getOtherUser(participants: Map<String, String>): ConversationUser {
+        val userId = ServiceLocator.authRepository.getUserAuthId()
+        val (otherUid, otherUsername) = requireNotNull(participants.entries.firstOrNull { it.key != userId }) {
+            "Participants map must contain at least one other user besides $userId."
         }
 
         return ConversationUser(
@@ -70,7 +75,8 @@ class ChatRepositoryImp(
         )
     }
 
-    override fun listenToMessages(chatId: String, userId: String): Flow<ChatResult> = callbackFlow {
+    override fun listenToMessages(chatId: String): Flow<ChatResult> = callbackFlow {
+        val userId = ServiceLocator.authRepository.getUserAuthId()
 
         val listenerRegistration = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
             .document(chatId)
@@ -87,7 +93,7 @@ class ChatRepositoryImp(
                         Message(
                             id = msgDTO.id,
                             text = msgDTO.text,
-                            isReceivedMessage = msgDTO.senderId == userId,
+                            isReceivedMessage = msgDTO.senderId != userId,
                             timestamp = msgDTO.timestamp
                         )
                     }
@@ -101,10 +107,10 @@ class ChatRepositoryImp(
     override suspend fun sendMessage(message: String, chatId: String): ChatResult {
         return try {
             val queryPath = "${Constants.DB_CHATS_COLLECTION}/$chatId/${Constants.DB_MESSAGES_COLLECTION}"
-            val myUid = auth.currentUser!!.uid
+            val userId = auth.currentUser!!.uid
 
             val chatData = hashMapOf(
-                Constants.DB_SENDER_ID to myUid,
+                Constants.DB_SENDER_ID to userId,
                 Constants.DB_TEXT to message,
                 Constants.DB_TIMESTAMP to FieldValue.serverTimestamp()
             )
@@ -123,67 +129,55 @@ class ChatRepositoryImp(
         }
     }
 
-    override suspend fun getUserByUsername(username: String): ChatResult {
+    override suspend fun findUserByKeyword(keyword: String): ChatResult {
 
         return try {
             val userDoc = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
-                .document(username)
+                .document(keyword)
                 .get()
                 .await()
 
             val username = userDoc.id
             val uid = userDoc.getString(Constants.DB_UID)
 
-            Log.d(TAG, "getUser: $username , $uid")
+            Log.d(TAG, "getUserByUsername: $username , $uid")
             ChatResult.UserFound(username, uid!!)
 
         } catch (e: Exception) {
-            Log.e(TAG, "getUser: error: ${e.localizedMessage}")
+            Log.e(TAG, "getUserByUsername: error: ${e.localizedMessage}")
             val errorMessage = e.localizedMessage ?: "get user failed"
             ChatResult.Error(errorMessage)
         }
     }
 
-    override suspend fun getUserByUid(userId: String): ChatResult {
+    // TODO: remove and store user data while logged in
+    override suspend fun getUserByUid(userId: String): String {
 
-        return try {
+        try {
             val userDoc = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
                 .whereEqualTo(Constants.DB_UID, userId)
                 .get()
                 .await()
 
             val username = userDoc.first().id
-
-            Log.d(TAG, "getUser: ${username}, $userId")
-            ChatResult.UserFound(username, userId)
+            return username
 
         } catch (e: Exception) {
-            Log.e(TAG, "getUser: error: ${e.localizedMessage}")
-            val errorMessage = e.localizedMessage ?: "get user failed"
-            ChatResult.Error(errorMessage)
+            Log.e(TAG, "getUserByUid: error: ${e.localizedMessage}")
+            throw IllegalArgumentException(e.localizedMessage)
         }
     }
 
-    override suspend fun createNewChat(username: String, userId: String): ChatResult {
+    override suspend fun createNewChat(otherUsername: String, otherUserId: String): ChatResult {
+        Log.d(TAG, "createNewChat: other user ID: $otherUserId")
 
         return try {
-            val myUid = auth.currentUser!!.uid
-            val myDataResult = getUserByUid(myUid)
-            var myUsername = ""
-
-            when (myDataResult) {
-                is ChatResult.UserFound -> {
-                    myUsername = myDataResult.username
-                }
-
-                else -> {}
-            }
-
-            val docName = "${myUid}_${userId}"
+            val userId = ServiceLocator.authRepository.getUserAuthId()
+            val username = getUserByUid(userId)
 
             val participants = mapOf(
-                myUid to myUsername,
-                userId to username
+                userId to username,
+                otherUserId to otherUsername
             )
 
             val chatData = hashMapOf(
@@ -191,18 +185,14 @@ class ChatRepositoryImp(
                 Constants.DB_PARTICIPANTS to participants
             )
 
-            firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
-                .document(docName)
-                .set(chatData)
-                .await()
+            val chatRef = firebaseDb.collection(Constants.DB_CHATS_COLLECTION).document()
+            chatRef.set(chatData).await()
 
-            ChatResult.ChatCreated(docName)
+            ChatResult.ChatCreated(chatRef.id)
 
         } catch (e: Exception) {
             Log.e(TAG, "sendMessage: error: ${e.localizedMessage}")
-            val errorMsg = e.localizedMessage ?: "send message failed"
-
-            ChatResult.Error(errorMsg)
+            ChatResult.Error(e.message)
         }
     }
 
@@ -217,5 +207,5 @@ sealed class ChatResult {
     data class ChatCreated(val chatId: String) : ChatResult()
     data class AllConversationsSuccess(val list: List<Conversation>) : ChatResult()
     data class ChatMessagesSuccess(val list: List<Message>) : ChatResult()
-    data class Error(val error: String) : ChatResult()
+    data class Error(val error: String?) : ChatResult()
 }

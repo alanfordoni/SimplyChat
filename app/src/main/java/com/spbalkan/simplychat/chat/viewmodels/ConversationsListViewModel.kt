@@ -6,7 +6,6 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.spbalkan.simplychat.ServiceLocator
 import com.spbalkan.simplychat.chat.ChatResult
-import com.spbalkan.simplychat.chat.models.ConversationUser
 import com.spbalkan.simplychat.chat.models.Conversation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +24,7 @@ class ConversationsListViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val result = ServiceLocator.chatRepository.getAllConversations()
+            val result = ServiceLocator.chatRepository.getUserConversations()
             when (result) {
                 is ChatResult.AllConversationsSuccess -> {
                     _state.update { currentState ->
@@ -55,15 +54,11 @@ class ConversationsListViewModel : ViewModel() {
             is ActionIntent.OnOpenNewChat -> {
                 _state.update { currentState ->
                     currentState.copy(
-                        showNewChatDialog = false
+                        showNewChatDialog = false,
+                        isLoading = true
                     )
                 }
-                viewModelScope.launch {
-                    _eventChannel.send(ConversationsEvents.EventOpenNewChat(
-                        action.username,
-                        action.uid
-                    ))
-                }
+                createChat(action.newChatUsername, action.newChatUid)
             }
 
             is ActionIntent.OnLogout -> {
@@ -80,21 +75,51 @@ class ConversationsListViewModel : ViewModel() {
         }
     }
 
+    fun createChat(newChatUsername: String, newChatUid: String) {
+        viewModelScope.launch {
+            val result = ServiceLocator.chatRepository.createNewChat(
+                otherUsername = newChatUsername,
+                otherUserId = newChatUid
+            )
 
+            when (result) {
+                is ChatResult.ChatCreated -> {
+                    _state.update { currentState ->
+                        currentState.copy(
+                            isLoading = false
+                        )
+                    }
+                    _eventChannel.send(ConversationsEvents.EventOpenNewChat(result.chatId, newChatUsername))
+                }
+
+                is ChatResult.Error -> {
+                    // TODO: show error
+                    _state.update { currentState ->
+                        currentState.copy(
+                            isLoading = false
+                        )
+                    }
+                }
+
+                else -> {}
+            }
+        }
+    }
 
     data class ConversationsState(
         val showNewChatDialog: Boolean = false,
-        val conversations: List<Conversation> = emptyList()
+        val conversations: List<Conversation> = emptyList(),
+        val isLoading: Boolean = false
     )
 
     sealed interface ActionIntent {
         data object OnSearchNewChat : ActionIntent
-        data class OnOpenNewChat(val username: String, val uid: String) : ActionIntent
+        data class OnOpenNewChat(val newChatUsername: String, val newChatUid: String) : ActionIntent
         data object OnLogout : ActionIntent
         data object OnNewChatDismiss : ActionIntent
     }
 
     sealed interface ConversationsEvents {
-        data class EventOpenNewChat(val username: String, val uid: String) : ConversationsEvents
+        data class EventOpenNewChat(val chatId: String, val newChatUsername: String) : ConversationsEvents
     }
 }

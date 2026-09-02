@@ -35,8 +35,8 @@ import com.spbalkan.simplychat.chat.viewmodels.ConversationsListViewModel
 @Composable
 fun ConversationsListScreen(
     viewModel: ConversationsListViewModel = viewModel(),
-    onChatSelected: (chatId: String, username: String, uid: String) -> Unit,
-    onStartNewChat: (username: String, uid: String) -> Unit,
+    onChatSelected: (chatId: String, newChatUsername: String) -> Unit,
+    onStartNewChat: (chatId: String, newChatUsername: String) -> Unit,
     onLogout: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -44,11 +44,11 @@ fun ConversationsListScreen(
     ConversationsListScreenContent(
         state = state,
         onAction = viewModel::onAction,
-        onOpenSelectedChat = { chatId, username, uid ->
+        onOpenSelectedChat = { chatId, newChatUsername ->
             onChatSelected(
                 chatId,
-                username,
-                uid)
+                newChatUsername
+            )
         },
         onLogout = {
             viewModel.onAction(ConversationsListViewModel.ActionIntent.OnLogout)
@@ -60,8 +60,8 @@ fun ConversationsListScreen(
         viewModel.event.collect { event ->
             if (event is ConversationsListViewModel.ConversationsEvents.EventOpenNewChat) {
                 onStartNewChat(
-                    event.username,
-                    event.uid
+                    event.newChatUsername,
+                    event.newChatUsername
                 )
             }
         }
@@ -73,7 +73,7 @@ fun ConversationsListScreen(
 fun ConversationsListScreenContent(
     state: ConversationsListViewModel.ConversationsState,
     onAction:(ConversationsListViewModel.ActionIntent) -> Unit,
-    onOpenSelectedChat: (String, String, String) -> Unit,
+    onOpenSelectedChat: (String, String) -> Unit,
     onLogout: () -> Unit
 ) {
     Scaffold(
@@ -124,7 +124,7 @@ fun ConversationsListScreenContent(
             ) { index, conversation ->
                 ConversationItem(
                     username = conversation.otherUser.username,
-                    onClick = { onOpenSelectedChat(conversation.id, conversation.otherUser.username, conversation.otherUser.uid) }
+                    onClick = { onOpenSelectedChat(conversation.id, conversation.otherUser.username) }
                 )
 
                 if (index < state.conversations.lastIndex) {
@@ -149,10 +149,10 @@ fun ConversationsListScreenContent(
 
         if (state.showNewChatDialog) {
             NewChatDialog(
-                onOpenNewChat = { username, uid ->
+                onOpenNewChat = { newChatUsername, newChatUid ->
                     onAction(ConversationsListViewModel.ActionIntent.OnOpenNewChat(
-                        username = username,
-                        uid = uid
+                        newChatUsername = newChatUsername,
+                        newChatUid = newChatUid
                     ))
                 },
                 onDismiss = {

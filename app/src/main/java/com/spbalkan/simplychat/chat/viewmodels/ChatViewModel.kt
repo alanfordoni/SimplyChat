@@ -24,7 +24,7 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     val inputState = _inputState.asStateFlow()
 
     val messagesState: StateFlow<MessagesState> = ServiceLocator.chatRepository
-        .listenToMessages(args.chatId, args.uid)
+        .listenToMessages(args.chatId)
         .map { result ->
             when (result) {
                 is ChatResult.ChatMessagesSuccess -> {
@@ -33,7 +33,7 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
                         error = ""
                     )
                 }
-                is ChatResult.Error -> MessagesState(error = result.error)
+                is ChatResult.Error -> MessagesState(error = result.error ?: "")
                 else -> MessagesState(error = "Unknown Error")
             }
         }

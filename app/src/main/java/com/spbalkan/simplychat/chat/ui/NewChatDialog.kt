@@ -35,7 +35,7 @@ import com.spbalkan.simplychat.ui.CustomInputTextView
 @Composable
 fun NewChatDialog(
     viewModel: NewChatDialogViewModel = viewModel(),
-    onOpenNewChat: (username: String, uid: String) -> Unit,
+    onOpenNewChat: (newChatUsername: String, newChatUid: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()

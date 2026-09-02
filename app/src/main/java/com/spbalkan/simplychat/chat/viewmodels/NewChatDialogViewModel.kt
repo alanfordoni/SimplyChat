@@ -42,7 +42,7 @@ class NewChatDialogViewModel : ViewModel() {
     private fun checkUser() {
         viewModelScope.launch {
             val searchText = _state.value.searchText
-            val result = ServiceLocator.chatRepository.getUserByUsername(searchText)
+            val result = ServiceLocator.chatRepository.findUserByKeyword(searchText)
 
             _state.update { currentState -> currentState.copy(isLoading = false) }
             when (result) {

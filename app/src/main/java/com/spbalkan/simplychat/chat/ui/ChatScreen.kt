@@ -34,7 +34,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.chat.viewmodels.ChatViewModel
-import com.spbalkan.simplychat.chat.viewmodels.NewChatViewModel
 import com.spbalkan.simplychat.ui.CustomInputTextView
 import com.spbalkan.simplychat.ui.theme.Blue40
 import com.spbalkan.simplychat.ui.theme.BlueGrey80
@@ -42,25 +41,6 @@ import com.spbalkan.simplychat.ui.theme.BlueGrey80
 // TODO: to add:
 // - dynamic vertical separation between messages of different senders
 
-// New conversation
-@Composable
-fun NewChatScreen(
-    viewModel: NewChatViewModel = viewModel(),
-    onNavigateBack: () -> Unit
-) {
-    val state by viewModel.inputState.collectAsStateWithLifecycle()
-    val messagesState by viewModel.messagesState.collectAsStateWithLifecycle()
-
-    ChatScreenContent(
-        inputState = state,
-        messagesState = messagesState,
-        onAction = viewModel::onAction,
-        username = viewModel.args.username,
-        onNavigateBack = onNavigateBack
-    )
-}
-
-// Already existing conversation
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = viewModel(),
@@ -73,7 +53,7 @@ fun ChatScreen(
         inputState = state,
         messagesState = messagesState,
         onAction = viewModel::onAction,
-        username = viewModel.args.username,
+        username = viewModel.args.otherUsername,
         onNavigateBack = onNavigateBack
     )
 }

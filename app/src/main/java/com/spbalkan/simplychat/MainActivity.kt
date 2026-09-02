@@ -18,7 +18,6 @@ import com.spbalkan.simplychat.auth.ui.LoginScreen
 import com.spbalkan.simplychat.auth.ui.RegisterScreen
 import com.spbalkan.simplychat.auth.ui.WelcomeScreen
 import com.spbalkan.simplychat.chat.ui.ChatScreen
-import com.spbalkan.simplychat.chat.ui.NewChatScreen
 import com.spbalkan.simplychat.chat.ui.ConversationsListScreen
 import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 import kotlinx.serialization.Serializable
@@ -91,17 +90,16 @@ fun AppNavHost() {
 
         composable<Screen.ConversationsList> {
             ConversationsListScreen(
-                onChatSelected = { chatId, username, uid ->
+                onChatSelected = { chatId, newChatUsername ->
                     navController.navigate(Screen.Chat(
                         chatId = chatId,
-                        username = username,
-                        uid = uid
+                        otherUsername = newChatUsername
                     ))
                 },
-                onStartNewChat = { username, uid ->
-                    navController.navigate(Screen.NewChat(
-                        username = username,
-                        uid = uid
+                onStartNewChat = { chatId, newChatUsername ->
+                    navController.navigate(Screen.Chat(
+                        chatId = chatId,
+                        otherUsername = newChatUsername
                     ))
                 },
                 onLogout = {
@@ -109,12 +107,6 @@ fun AppNavHost() {
                         popUpTo(0) { inclusive = true }
                     }
                 }
-            )
-        }
-
-        composable<Screen.NewChat> { backStackEntry ->
-            NewChatScreen(
-                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -142,9 +134,6 @@ sealed interface Screen {
     data object ConversationsList : Screen
 
     @Serializable
-    data class NewChat(val username: String, val uid: String) : Screen
-
-    @Serializable
-    data class Chat(val chatId: String, val username: String, val uid: String) : Screen
+    data class Chat(val chatId: String, val otherUsername: String) : Screen
 }
 
