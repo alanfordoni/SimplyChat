@@ -5,9 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.spbalkan.simplychat.Screen
-import com.spbalkan.simplychat.ServiceLocator
+import com.spbalkan.simplychat.chat.ChatRepository
 import com.spbalkan.simplychat.chat.ChatResult
 import com.spbalkan.simplychat.chat.models.Message
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,14 +17,19 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
+@HiltViewModel
+class ChatViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val chatRepository: ChatRepository
+) : ViewModel() {
 
     val args = savedStateHandle.toRoute<Screen.Chat>()
     private val _inputState = MutableStateFlow("")
     val inputState = _inputState.asStateFlow()
 
-    val messagesState: StateFlow<MessagesState> = ServiceLocator.chatRepository
+    val messagesState: StateFlow<MessagesState> = chatRepository
         .listenToMessages(args.chatId)
         .map { result ->
             when (result) {
@@ -51,7 +57,7 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
             is ActionIntent.OnSendMessage -> {
                 viewModelScope.launch {
-                    ServiceLocator.chatRepository.sendMessage(
+                    chatRepository.sendMessage(
                         message = _inputState.value,
                         chatId = args.chatId,
                     )

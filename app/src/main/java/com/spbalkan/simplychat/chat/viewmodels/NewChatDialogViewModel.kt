@@ -3,16 +3,21 @@ package com.spbalkan.simplychat.chat.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spbalkan.simplychat.ServiceLocator
+import com.spbalkan.simplychat.chat.ChatRepository
 import com.spbalkan.simplychat.chat.ChatResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class NewChatDialogViewModel : ViewModel() {
+@HiltViewModel
+class NewChatDialogViewModel @Inject constructor(
+    private val chatRepository: ChatRepository
+) : ViewModel() {
 
     private val _state = MutableStateFlow(NewChatState())
     val state = _state.asStateFlow()
@@ -42,7 +47,7 @@ class NewChatDialogViewModel : ViewModel() {
     private fun checkUser() {
         viewModelScope.launch {
             val searchText = _state.value.searchText
-            val result = ServiceLocator.chatRepository.findUserByKeyword(searchText)
+            val result = chatRepository.findUserByKeyword(searchText)
 
             _state.update { currentState -> currentState.copy(isLoading = false) }
             when (result) {

@@ -27,14 +27,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.chat.viewmodels.ConversationsListViewModel
 
 @Composable
 fun ConversationsListScreen(
-    viewModel: ConversationsListViewModel = viewModel(),
+    viewModel: ConversationsListViewModel = hiltViewModel(),
     onChatSelected: (chatId: String, newChatUsername: String) -> Unit,
     onStartNewChat: (chatId: String, newChatUsername: String) -> Unit,
     onLogout: () -> Unit

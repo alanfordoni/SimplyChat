@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.chat.viewmodels.NewChatDialogViewModel
 import com.spbalkan.simplychat.chat.viewmodels.NewChatDialogViewModel.ActionIntent
@@ -34,7 +34,7 @@ import com.spbalkan.simplychat.ui.CustomInputTextView
 
 @Composable
 fun NewChatDialog(
-    viewModel: NewChatDialogViewModel = viewModel(),
+    viewModel: NewChatDialogViewModel = hiltViewModel(),
     onOpenNewChat: (newChatUsername: String, newChatUid: String) -> Unit,
     onDismiss: () -> Unit
 ) {

@@ -4,17 +4,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.spbalkan.simplychat.ServiceLocator
+import com.spbalkan.simplychat.chat.ChatRepository
 import com.spbalkan.simplychat.chat.ChatResult
 import com.spbalkan.simplychat.chat.models.Conversation
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ConversationsListViewModel : ViewModel() {
+@HiltViewModel
+class ConversationsListViewModel @Inject constructor (
+    private val chatRepository: ChatRepository
+): ViewModel() {
 
     private val _state = MutableStateFlow(ConversationsState())
     val state = _state.asStateFlow()
@@ -24,7 +29,7 @@ class ConversationsListViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val result = ServiceLocator.chatRepository.getUserConversations()
+            val result = chatRepository.getUserConversations()
             when (result) {
                 is ChatResult.AllConversationsSuccess -> {
                     _state.update { currentState ->
@@ -75,9 +80,9 @@ class ConversationsListViewModel : ViewModel() {
         }
     }
 
-    fun createChat(newChatUsername: String, newChatUid: String) {
+    private fun createChat(newChatUsername: String, newChatUid: String) {
         viewModelScope.launch {
-            val result = ServiceLocator.chatRepository.createNewChat(
+            val result = chatRepository.createNewChat(
                 otherUsername = newChatUsername,
                 otherUserId = newChatUid
             )

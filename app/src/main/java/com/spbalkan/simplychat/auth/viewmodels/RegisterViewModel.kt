@@ -3,18 +3,23 @@ package com.spbalkan.simplychat.auth.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spbalkan.simplychat.ServiceLocator
+import com.spbalkan.simplychat.auth.AuthRepository
 import com.spbalkan.simplychat.auth.AuthResult
 import com.spbalkan.simplychat.utils.isPasswordValid
 import com.spbalkan.simplychat.utils.isValidEmail
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class RegisterViewModel : ViewModel() {
+@HiltViewModel
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterState())
     val state = _state.asStateFlow()
@@ -35,7 +40,7 @@ class RegisterViewModel : ViewModel() {
 
                 if (username.length > 4) {
                     viewModelScope.launch {
-                        val isAvailable = !ServiceLocator.authRepository.doesUserExist(username)
+                        val isAvailable = !authRepository.doesUserExist(username)
                         _state.update { currentState ->
                             currentState.copy(
                                 usernameAvailable = isAvailable,
@@ -139,7 +144,7 @@ class RegisterViewModel : ViewModel() {
             _state.update { it.copy(isLoading = true) }
             Log.d(TAG, "register: ")
 
-            val result = ServiceLocator.authRepository.onRegister(email, password)
+            val result = authRepository.onRegister(email, password)
             Log.d(TAG, "register: 2")
 
             when (result) {
@@ -159,7 +164,7 @@ class RegisterViewModel : ViewModel() {
     }
 
     suspend fun addUsername(uid: String) {
-        ServiceLocator.authRepository.addUsername(_state.value.username, uid)
+        authRepository.addUsername(_state.value.username, uid)
 
         _state.update { it.copy(isLoading = false) }
     }

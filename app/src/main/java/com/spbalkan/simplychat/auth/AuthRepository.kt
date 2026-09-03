@@ -7,17 +7,19 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.spbalkan.simplychat.utils.Constants
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 
 interface AuthRepository {
     fun isUserSignedIn(): Boolean
-    fun getUserAuthId(): String
     suspend fun doesUserExist(rawUsername: String): Boolean
     suspend fun addUsername(rawUsername: String, uid: String): AuthResult
     suspend fun onRegister(email: String, password: String): AuthResult
     suspend fun onLogin(email: String, password: String): AuthResult
 }
 
-class AuthRepositoryImp(
+@Singleton
+class AuthRepositoryImp @Inject constructor (
     private val auth: FirebaseAuth,
     private val firebaseDb: FirebaseFirestore
 ) : AuthRepository {
@@ -25,13 +27,6 @@ class AuthRepositoryImp(
     override fun isUserSignedIn(): Boolean {
         val currentUser = auth.currentUser
         return currentUser != null
-    }
-
-    override fun getUserAuthId(): String {
-        val userId = requireNotNull(auth.uid) {
-            "User Auth ID must not be null after Authentication"
-        }
-        return userId
     }
 
     override suspend fun doesUserExist(rawUsername: String): Boolean {

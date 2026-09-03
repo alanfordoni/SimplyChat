@@ -5,7 +5,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.spbalkan.simplychat.ServiceLocator
 import com.spbalkan.simplychat.chat.models.Conversation
 import com.spbalkan.simplychat.chat.models.ConversationDTO
 import com.spbalkan.simplychat.chat.models.ConversationUser
@@ -16,6 +15,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.collections.map
 
 interface ChatRepository {
@@ -23,19 +24,19 @@ interface ChatRepository {
     fun listenToMessages(chatId: String): Flow<ChatResult>
     // find user by username keyword
     suspend fun findUserByKeyword(keyword: String): ChatResult
-    suspend fun getUserByUid(userId: String): String
     suspend fun createNewChat(otherUsername: String, otherUserId: String): ChatResult
     suspend fun sendMessage(message: String, chatId: String): ChatResult
 }
 
-class ChatRepositoryImp(
+@Singleton
+class ChatRepositoryImp @Inject constructor(
     private val auth: FirebaseAuth,
     private val firebaseDb: FirebaseFirestore
 ) : ChatRepository {
     override suspend fun getUserConversations(): ChatResult {
 
         return try {
-            val userId = ServiceLocator.authRepository.getUserAuthId()
+            val userId = getUserAuthId()
             val userChats = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
                 .whereNotEqualTo("${Constants.DB_PARTICIPANTS}.$userId", null)
                 .get()
@@ -64,7 +65,7 @@ class ChatRepositoryImp(
     }
 
     private fun getOtherUser(participants: Map<String, String>): ConversationUser {
-        val userId = ServiceLocator.authRepository.getUserAuthId()
+        val userId = getUserAuthId()
         val (otherUid, otherUsername) = requireNotNull(participants.entries.firstOrNull { it.key != userId }) {
             "Participants map must contain at least one other user besides $userId."
         }
@@ -76,7 +77,7 @@ class ChatRepositoryImp(
     }
 
     override fun listenToMessages(chatId: String): Flow<ChatResult> = callbackFlow {
-        val userId = ServiceLocator.authRepository.getUserAuthId()
+        val userId = getUserAuthId()
 
         val listenerRegistration = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
             .document(chatId)
@@ -150,29 +151,11 @@ class ChatRepositoryImp(
         }
     }
 
-    // TODO: remove and store user data while logged in
-    override suspend fun getUserByUid(userId: String): String {
-
-        try {
-            val userDoc = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
-                .whereEqualTo(Constants.DB_UID, userId)
-                .get()
-                .await()
-
-            val username = userDoc.first().id
-            return username
-
-        } catch (e: Exception) {
-            Log.e(TAG, "getUserByUid: error: ${e.message}")
-            throw IllegalArgumentException(e.message)
-        }
-    }
-
     override suspend fun createNewChat(otherUsername: String, otherUserId: String): ChatResult {
         Log.d(TAG, "createNewChat: other user ID: $otherUserId")
 
         return try {
-            val userId = ServiceLocator.authRepository.getUserAuthId()
+            val userId = getUserAuthId()
             val username = getUserByUid(userId)
 
             val participants = mapOf(
@@ -193,6 +176,31 @@ class ChatRepositoryImp(
         } catch (e: Exception) {
             Log.e(TAG, "sendMessage: error: ${e.message}")
             ChatResult.Error(e.message)
+        }
+    }
+
+    // TODO: remove and store user data while logged in
+    private fun getUserAuthId(): String {
+        val userId = requireNotNull(auth.uid) {
+            "User Auth ID must not be null after Authentication"
+        }
+        return userId
+    }
+
+    private suspend fun getUserByUid(userId: String): String {
+
+        try {
+            val userDoc = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
+                .whereEqualTo(Constants.DB_UID, userId)
+                .get()
+                .await()
+
+            val username = userDoc.first().id
+            return username
+
+        } catch (e: Exception) {
+            Log.e(TAG, "getUserByUid: error: ${e.message}")
+            throw IllegalArgumentException(e.message)
         }
     }
 

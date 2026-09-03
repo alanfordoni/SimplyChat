@@ -20,8 +20,10 @@ import com.spbalkan.simplychat.auth.ui.WelcomeScreen
 import com.spbalkan.simplychat.chat.ui.ChatScreen
 import com.spbalkan.simplychat.chat.ui.ConversationsListScreen
 import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

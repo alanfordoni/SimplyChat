@@ -30,8 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.chat.viewmodels.ChatViewModel
@@ -45,7 +45,7 @@ import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 
 @Composable
 fun ChatScreen(
-    viewModel: ChatViewModel = viewModel(),
+    viewModel: ChatViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.inputState.collectAsStateWithLifecycle()

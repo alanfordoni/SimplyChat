@@ -30,8 +30,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.auth.viewmodels.LoginViewModel
 import com.spbalkan.simplychat.auth.viewmodels.LoginViewModel.ActionIntent.*
@@ -43,7 +43,7 @@ import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
+    viewModel: LoginViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
