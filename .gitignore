@@ -25,3 +25,5 @@ captures/
 
 # Kotlin / Java
 *.class
+
+**/google-services.json
