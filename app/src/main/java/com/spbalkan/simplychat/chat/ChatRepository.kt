@@ -106,6 +106,8 @@ class ChatRepositoryImp @Inject constructor(
     }
 
     override suspend fun sendMessage(message: String, chatId: String): ChatResult {
+        Log.d(TAG, "sendMessage: chatId: $chatId")
+        
         return try {
             val queryPath = "${Constants.DB_CHATS_COLLECTION}/$chatId/${Constants.DB_MESSAGES_COLLECTION}"
             val userId = auth.currentUser!!.uid
