@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spbalkan.simplychat.R
+import com.spbalkan.simplychat.auth.models.PasswordRule
+import com.spbalkan.simplychat.auth.models.PasswordRuleType
 import com.spbalkan.simplychat.auth.viewmodels.RegisterViewModel
 import com.spbalkan.simplychat.ui.CustomBlockingCircleLoader
 import com.spbalkan.simplychat.ui.CustomFilledButton
@@ -96,6 +98,8 @@ fun RegisterScreenContent(
         }
     ) { paddingValues ->
 
+        val scrollState = rememberScrollState()
+
         var isUsernameDirty by rememberSaveable { mutableStateOf(false) }
         var isEmailDirty by rememberSaveable { mutableStateOf(false) }
         var isPasswordDirty by rememberSaveable { mutableStateOf(false) }
@@ -106,7 +110,7 @@ fun RegisterScreenContent(
                 .fillMaxWidth()
                 .padding(paddingValues)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CustomInputTextView(
@@ -136,7 +140,7 @@ fun RegisterScreenContent(
             CustomPasswordInputText(
                 labelText = stringResource(R.string.label_password),
                 password = state.password,
-                errorText = stringResource(R.string.error_password_not_valid),
+                errorText = "",
                 isError = state.passwordError,
                 isDirty = isPasswordDirty,
                 onPasswordChange = {
@@ -144,6 +148,10 @@ fun RegisterScreenContent(
                     if (!isPasswordDirty) isPasswordDirty = true
                 }
             )
+
+            if (state.password.isNotEmpty()) {
+                PasswordRulesView(state.passwordRulesList, !state.passwordError)
+            }
 
             CustomPasswordInputText(
                 labelText = stringResource(R.string.label_confirm_password),
@@ -195,7 +203,17 @@ fun RegisterScreenContent(
 @Preview
 @Composable
 fun RegisterScreenPreview() {
-    val state = RegisterViewModel.RegisterState()
+    val rules = listOf(
+        PasswordRule(PasswordRuleType.MIN_LENGTH, "Minimum 8 characters", false),
+        PasswordRule(PasswordRuleType.CONTAINS_LETTER, "Contains a letter", true),
+        PasswordRule(PasswordRuleType.CONTAINS_DIGIT, "Contains a digit", false)
+    )
+
+    val state = RegisterViewModel.RegisterState(
+        password = "sss",
+        passwordError = true,
+        passwordRulesList = rules
+    )
     SimplyChatTheme {
         RegisterScreenContent (
             state = state,

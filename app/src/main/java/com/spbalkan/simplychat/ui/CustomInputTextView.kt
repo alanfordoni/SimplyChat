@@ -174,7 +174,8 @@ fun CustomPasswordInputText(
                 focusedContainerColor = Color.White,
                 errorContainerColor = Color.White,
                 focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent, cursorColor = Color.Gray
+                unfocusedBorderColor = Color.Gray, cursorColor = Color.Gray,
+                errorBorderColor = Color.Red
             ),
             singleLine = true,
             isError = isError && isDirty,

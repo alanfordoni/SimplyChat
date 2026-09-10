@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spbalkan.simplychat.auth.AuthRepository
 import com.spbalkan.simplychat.auth.AuthResult
+import com.spbalkan.simplychat.auth.models.PasswordRule
+import com.spbalkan.simplychat.auth.models.PasswordRuleType
+import com.spbalkan.simplychat.utils.checkPasswordRules
 import com.spbalkan.simplychat.utils.isPasswordValid
 import com.spbalkan.simplychat.utils.isValidEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -82,7 +85,8 @@ class RegisterViewModel @Inject constructor(
 
             is ActionIntent.OnPasswordChange -> {
                 val password = action.password
-                val passwordError = !action.password.isPasswordValid()
+                val rulesList = password.checkPasswordRules(_state.value.passwordRulesList)
+                val passwordError = rulesList.any { !it.isFulfilled }
 
                 _state.update { currentState ->
                     currentState.copy(
@@ -94,7 +98,8 @@ class RegisterViewModel @Inject constructor(
                             emailError = currentState.emailError,
                             passwordError = passwordError,
                             confirmPasswordError = currentState.confirmPasswordError
-                        )
+                        ),
+                        passwordRulesList = rulesList
                     )
                 }
             }
@@ -179,7 +184,8 @@ class RegisterViewModel @Inject constructor(
         val emailError: Boolean = false,
         val passwordError: Boolean = false,
         val confirmPasswordError: Boolean = false,
-        val registerEnabled: Boolean = false
+        val registerEnabled: Boolean = false,
+        val passwordRulesList: List<PasswordRule> = passwordRules
     )
 
     sealed interface ActionIntent {
@@ -197,5 +203,12 @@ class RegisterViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "zzRegisterVM"
+
+        val passwordRules = listOf(
+                PasswordRule(PasswordRuleType.MIN_LENGTH, "Minimum 8 characters", false),
+                PasswordRule(PasswordRuleType.CONTAINS_LETTER, "Contains a letter", false),
+                PasswordRule(PasswordRuleType.CONTAINS_DIGIT, "Contains a digit", false)
+        )
+
     }
 }
