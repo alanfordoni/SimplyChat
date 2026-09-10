@@ -60,7 +60,7 @@ fun ConversationsListScreen(
         viewModel.event.collect { event ->
             if (event is ConversationsListViewModel.ConversationsEvents.EventOpenNewChat) {
                 onStartNewChat(
-                    event.newChatUsername,
+                    event.chatId,
                     event.newChatUsername
                 )
             }
