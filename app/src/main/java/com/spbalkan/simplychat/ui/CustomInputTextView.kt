@@ -102,7 +102,7 @@ fun CustomInputTextView(
 @Preview
 @Composable
 fun CustomInputTextViewPreview() {
-    SimplyChatTheme() {
+    SimplyChatTheme {
         CustomInputTextView(
             modifier = Modifier.padding(20.dp),
             "Input",

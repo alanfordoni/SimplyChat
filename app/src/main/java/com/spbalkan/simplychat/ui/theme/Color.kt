@@ -11,3 +11,5 @@ val IceBlue80 = Color(0xFFE0F7FA)   // Tertiary: Very Light Cyan/Blue
 val Blue40 = Color(0xFF4682B4)      // Primary: Steel Blue
 val BlueGrey40 = Color(0xFF465E6D)  // Secondary: Slate Blue-Grey
 val IceBlue40 = Color(0xFF006064)   // Tertiary: Dark Cyan
+
+val GreenNephritis = Color(0xFF27AE60)

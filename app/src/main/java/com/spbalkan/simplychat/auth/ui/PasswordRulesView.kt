@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.spbalkan.simplychat.R
 import com.spbalkan.simplychat.auth.models.PasswordRule
 import com.spbalkan.simplychat.auth.viewmodels.RegisterViewModel
+import com.spbalkan.simplychat.ui.theme.GreenNephritis
 import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 
 @Composable
@@ -37,7 +38,7 @@ fun PasswordRulesView(
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = if (isPasswordValid) Color.Green else Color.Red,
+                color = if (isPasswordValid) GreenNephritis else Color.Red,
                 shape = TooltipShape()
             )
             .padding(top = 10.dp)
@@ -58,7 +59,7 @@ fun PasswordRulesView(
                             modifier = Modifier
                                 .size(20.dp)
                                 .align(Alignment.CenterVertically),
-                            tint = Color.Green
+                            tint = GreenNephritis
                         )
                     } else {
                         Icon(
@@ -77,7 +78,7 @@ fun PasswordRulesView(
                         modifier = Modifier.align(Alignment.CenterVertically),
                         text = rule.text,
                         fontSize = TextUnit(14f, TextUnitType.Sp),
-                        color = if (rule.isFulfilled) Color.Green else Color.Red
+                        color = if (rule.isFulfilled) GreenNephritis else Color.Red
                     )
                 }
 
