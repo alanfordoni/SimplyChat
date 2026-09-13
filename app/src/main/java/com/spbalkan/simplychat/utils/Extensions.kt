@@ -1,8 +1,13 @@
 package com.spbalkan.simplychat.utils
 
 import android.util.Log
+import com.google.firebase.Timestamp
 import com.spbalkan.simplychat.auth.models.PasswordRule
 import com.spbalkan.simplychat.auth.models.PasswordRuleType
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 fun String.isValidEmail(): Boolean {
     // Regex for basic email validation
@@ -52,4 +57,24 @@ fun String.checkPasswordRules(rules: List<PasswordRule>): List<PasswordRule> {
     }
 
     return list.toList()
+}
+
+fun Timestamp.toDateString(): String {
+
+    val instant = this.toInstant()
+    val zoneId = ZoneId.systemDefault()
+    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+    return formatter.format(instant.atZone(zoneId))
+}
+
+fun LocalDate.toDateString(): String {
+    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+    return this.format(formatter)
+}
+
+fun Timestamp.toDailyTime(): String {
+
+    val instant = this.toInstant()
+    val zoneId = ZoneId.systemDefault()
+    return DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()).format(instant.atZone(zoneId))
 }

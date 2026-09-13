@@ -5,7 +5,7 @@ import com.google.firebase.firestore.DocumentId
 
 data class MessageDTO(
     @DocumentId
-    val id: String = "", // Firestore automatically sets this to the document ID
+    val id: String = "",
     val text: String = "",
     val senderId: String= "",
     val timestamp: Timestamp? = null

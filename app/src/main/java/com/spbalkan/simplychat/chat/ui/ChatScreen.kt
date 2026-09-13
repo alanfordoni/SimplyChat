@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,11 +35,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spbalkan.simplychat.R
-import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.chat.viewmodels.ChatViewModel
 import com.spbalkan.simplychat.ui.CustomInputTextView
 import com.spbalkan.simplychat.ui.theme.Blue40
+import com.spbalkan.simplychat.ui.theme.BlueGrey40
 import com.spbalkan.simplychat.ui.theme.BlueGrey80
+import com.spbalkan.simplychat.ui.theme.IceBlue80
 import com.spbalkan.simplychat.ui.theme.SimplyChatTheme
 
 // TODO: to add:
@@ -132,7 +135,16 @@ fun ChatScreenContent(
                 items = messagesState.messagesList,
                 key = { _, message -> message.id }
             ) { _, message ->
-                MessageItem(message)
+                if (message is ChatViewModel.ChatWrapperItem.DateHeader) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(all = 12.dp),
+                        textAlign = TextAlign.Center,
+                        text = message.dateText)
+                } else {
+                    MessageItem(message as ChatViewModel.ChatWrapperItem.MessageBubble)
+                }
             }
         }
     }
@@ -140,7 +152,7 @@ fun ChatScreenContent(
 
 @Composable
 fun MessageItem(
-    message: Message
+    message: ChatViewModel.ChatWrapperItem.MessageBubble
 ) {
     Box(
         modifier = Modifier
@@ -150,12 +162,12 @@ fun MessageItem(
         if (message.isReceivedMessage) {
             ReceivedMessage(
                 Modifier.align(Alignment.CenterStart),
-                message.text
+                message
             )
         } else {
             MyMessage(
                 Modifier.align(Alignment.CenterEnd),
-                message.text
+                message
             )
         }
     }
@@ -164,7 +176,7 @@ fun MessageItem(
 @Composable
 fun MyMessage(
     modifier: Modifier = Modifier,
-    text: String
+    message: ChatViewModel.ChatWrapperItem.MessageBubble
 ) {
     Box(
         modifier = modifier
@@ -173,25 +185,42 @@ fun MyMessage(
                 start = 48.dp
             )
     ) {
-        Text(
+        Row(
             modifier = Modifier
                 .background(
                     color = BlueGrey80,
                     shape = RoundedCornerShape(12.dp)
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
-            text = text,
-            color = Color.Black,
-            textAlign = TextAlign.End,
-            fontSize = TextUnit(16f, TextUnitType.Sp)
-        )
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                modifier = Modifier
+                    .weight(1f, fill = false),
+                text = message.text,
+                color = Color.Black,
+                textAlign = TextAlign.End,
+                fontSize = TextUnit(16f, TextUnitType.Sp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                modifier = Modifier
+                    .align(Alignment.Bottom),
+                maxLines = 1,
+                text = message.time,
+                color = BlueGrey40,
+                fontSize = TextUnit(12f, TextUnitType.Sp)
+            )
+        }
     }
 }
 
 @Composable
 fun ReceivedMessage(
     modifier: Modifier = Modifier,
-    text: String
+    message: ChatViewModel.ChatWrapperItem.MessageBubble
 ) {
     Box(
         modifier = modifier
@@ -200,17 +229,35 @@ fun ReceivedMessage(
                 end = 48.dp
             )
     ) {
-        Text(
+        Row(
             modifier = Modifier
                 .background(
                     color = Blue40,
                     shape = RoundedCornerShape(12.dp)
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
-            text = text,
-            color = Color.White,
-            fontSize = TextUnit(16f, TextUnitType.Sp)
-        )
+        ) {
+            Text(
+                modifier = Modifier
+                    .weight(1f, fill = false),
+                text = message.text,
+                color = Color.White,
+                fontSize = TextUnit(16f, TextUnitType.Sp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                modifier = Modifier
+                    .align(Alignment.Bottom),
+                text = message.time,
+                color = IceBlue80,
+                fontSize = TextUnit(12f, TextUnitType.Sp)
+            )
+        }
+
+
+
     }
 
 }
@@ -221,11 +268,15 @@ fun ChatScreenContentPreview() {
     SimplyChatTheme {
         val messagesState = ChatViewModel.MessagesState(
             messagesList = listOf(
-                Message(
+                ChatViewModel.ChatWrapperItem.MessageBubble(
                     id = "sdsd",
                     text = "Ich habe viel Sport gemacht, denn ich hatte stressig Woche",
                     isReceivedMessage = false,
-                    timestamp = null
+                    time = "09:32"
+                ),
+                ChatViewModel.ChatWrapperItem.DateHeader(
+                    id = "1",
+                    dateText = "22 Feb 2026"
                 )
             )
         )

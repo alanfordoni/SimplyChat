@@ -1,6 +1,7 @@
 package com.spbalkan.simplychat.chat
 
 import android.util.Log
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -95,7 +96,7 @@ class ChatRepositoryImp @Inject constructor(
                             id = msgDTO.id,
                             text = msgDTO.text,
                             isReceivedMessage = msgDTO.senderId != userId,
-                            timestamp = msgDTO.timestamp
+                            timestamp = msgDTO.timestamp ?: Timestamp.now()
                         )
                     }
                     trySend(ChatResult.ChatMessagesSuccess(msgList))

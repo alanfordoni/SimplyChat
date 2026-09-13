@@ -6,5 +6,5 @@ data class Message(
     val id: String,
     val text: String,
     val isReceivedMessage: Boolean,
-    val timestamp: Timestamp?
+    val timestamp: Timestamp
 )
