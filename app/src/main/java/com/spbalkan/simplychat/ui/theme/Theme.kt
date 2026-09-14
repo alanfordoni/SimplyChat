@@ -16,6 +16,7 @@ private val DarkColorScheme = darkColorScheme(
     secondary = BlueGrey80,
     tertiary = IceBlue80,
     background = Color(0xFF0F172A),
+    onBackground = GrayClouds,
     surface = Color(0xFF1E293B)
 )
 
@@ -24,6 +25,7 @@ private val LightColorScheme = lightColorScheme(
     secondary = BlueGrey40,
     tertiary = IceBlue40,
     background = Color(0xFFFFFBFE),
+    onBackground = GrayMidnight,
     surface = Color(0xFFFFFBFE)
 )
 
