@@ -137,7 +137,7 @@ fun ChatScreenContent(
             painterResource(R.drawable.bg_chat),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
-            alpha = 0.3f,
+            alpha = 0.2f,
             modifier = Modifier
                 .fillMaxSize()
         )
