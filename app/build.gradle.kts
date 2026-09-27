@@ -60,6 +60,10 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    // Work
+    implementation(libs.androidx.work)
+    implementation(libs.hilt.work)
+    implementation(libs.hilt.androidx.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
