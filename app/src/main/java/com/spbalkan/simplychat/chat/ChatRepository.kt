@@ -12,6 +12,8 @@ import com.spbalkan.simplychat.chat.models.ConversationUser
 import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.chat.models.MessageDTO
 import com.spbalkan.simplychat.utils.Constants
+import com.spbalkan.simplychat.utils.toDailyTime
+import com.spbalkan.simplychat.utils.toFirebaseTimestamp
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -51,6 +53,8 @@ class ChatRepositoryImp @Inject constructor(
             val domainList = list.map { convoDTO ->
                 Conversation(
                     id = convoDTO.id,
+                    lastMessageSenderId = convoDTO.lastMessageSenderId,
+                    lastMessageText = convoDTO.lastMessageText,
                     participants = convoDTO.participants,
                     otherUser = getOtherUser(convoDTO.participants),
                     lastUpdated = convoDTO.lastUpdated
@@ -110,19 +114,31 @@ class ChatRepositoryImp @Inject constructor(
         Log.d(TAG, "sendMessage: chatId: $chatId")
         
         return try {
-            val queryPath = "${Constants.DB_CHATS_COLLECTION}/$chatId/${Constants.DB_MESSAGES_COLLECTION}"
             val userId = auth.currentUser!!.uid
 
-            val chatData = hashMapOf(
+            val parentChatRef = firebaseDb
+                .collection(Constants.DB_CHATS_COLLECTION)
+                .document(chatId)
+            val newMessageRef = parentChatRef
+                .collection(Constants.DB_MESSAGES_COLLECTION)
+                .document()
+
+            val messageData = hashMapOf(
                 Constants.DB_SENDER_ID to userId,
                 Constants.DB_TEXT to message,
                 Constants.DB_TIMESTAMP to FieldValue.serverTimestamp()
             )
+            val parentUpdateData = hashMapOf(
+                Constants.DB_LAST_UPDATED to FieldValue.serverTimestamp(),
+                Constants.DB_LAST_MESSAGE_TEXT to message,
+                Constants.DB_LAST_MESSAGE_SENDER_ID to userId
+            )
 
-            firebaseDb.collection(queryPath)
-                .document()
-                .set(chatData)
-                .await()
+            // Atomic Batch Write
+            val batch = firebaseDb.batch()
+            batch.set(newMessageRef, messageData)
+            batch.update(parentChatRef, parentUpdateData)
+            batch.commit().await()
 
             ChatResult.MessageSent
         } catch (e: Exception) {

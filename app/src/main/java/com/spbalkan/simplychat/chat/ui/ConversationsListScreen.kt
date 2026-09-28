@@ -124,6 +124,7 @@ fun ConversationsListScreenContent(
             ) { index, conversation ->
                 ConversationItem(
                     username = conversation.otherUser.username,
+                    lastMessage = conversation.lastMessageText,
                     onClick = { onOpenSelectedChat(conversation.id, conversation.otherUser.username) }
                 )
 
@@ -166,6 +167,7 @@ fun ConversationsListScreenContent(
 @Composable
 fun ConversationItem(
     username: String,
+    lastMessage: String?,
     onClick: () -> Unit
 ) {
     Column(
@@ -184,5 +186,12 @@ fun ConversationItem(
             text = username,
             fontSize = TextUnit(24f, TextUnitType.Sp)
         )
+        lastMessage?.let { msg ->
+            Text(
+                text = msg,
+                maxLines = 2,
+                fontSize = TextUnit(16f, TextUnitType.Sp)
+            )
+        }
     }
 }
