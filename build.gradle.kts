@@ -6,3 +6,14 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.hilt) apply false
 }
+
+allprojects {
+    configurations.all {
+        resolutionStrategy {
+            dependencySubstitution {
+                substitute(module("com.intellij:annotations"))
+                    .using(module("org.jetbrains:annotations:23.0.0"))
+            }
+        }
+    }
+}
