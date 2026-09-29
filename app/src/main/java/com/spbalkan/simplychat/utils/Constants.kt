@@ -11,5 +11,10 @@ object Constants {
     const val DB_TEXT = "text"
     const val DB_TIMESTAMP = "timestamp"
     const val DB_LAST_UPDATED = "lastUpdated"
+    const val DB_LAST_MESSAGE_TEXT = "lastMessageText"
+    const val DB_LAST_MESSAGE_SENDER_ID = "lastMessageSenderId"
     const val DB_PARTICIPANTS = "participants"
+
+    // WorkManager
+    const val WM_CHECK_MESSAGES = "PeriodicMessageCheck"
 }

@@ -78,3 +78,7 @@ fun Timestamp.toDailyTime(): String {
     val zoneId = ZoneId.systemDefault()
     return DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()).format(instant.atZone(zoneId))
 }
+
+fun Timestamp.toEpochMilli(): Long = this.toDate().time
+
+fun Long.toFirebaseTimestamp(): Timestamp = Timestamp(this / 1000, ((this % 1000) * 1_000_000).toInt())
