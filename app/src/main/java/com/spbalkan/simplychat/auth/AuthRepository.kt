@@ -1,10 +1,9 @@
 package com.spbalkan.simplychat.auth
 
 import android.util.Log
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.spbalkan.simplychat.data.DataStoreRepository
 import com.spbalkan.simplychat.utils.Constants
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -21,7 +20,8 @@ interface AuthRepository {
 @Singleton
 class AuthRepositoryImp @Inject constructor (
     private val auth: FirebaseAuth,
-    private val firebaseDb: FirebaseFirestore
+    private val firebaseDb: FirebaseFirestore,
+    private val dataStoreRepository: DataStoreRepository
 ) : AuthRepository {
 
     override fun isUserSignedIn(): Boolean {
@@ -73,6 +73,7 @@ class AuthRepositoryImp @Inject constructor (
                 .await()
 
             return result.user?.uid?.let { uid ->
+                saveUsername(uid)
                 AuthResult.RegisterSuccess(uid)
             } ?: run {
                 Log.e(TAG, "onRegister: error: user null")
@@ -89,9 +90,13 @@ class AuthRepositoryImp @Inject constructor (
     override suspend fun onLogin(email: String, password: String): AuthResult {
 
         try {
-            Firebase.auth
-                .signInWithEmailAndPassword(email, password)
+            auth.signInWithEmailAndPassword(email, password)
                 .await()
+
+            auth.currentUser?.uid?.let { userId ->
+                saveUsername(userId)
+            }
+
             return AuthResult.LoginSuccess
 
         } catch (e: Exception) {
@@ -99,6 +104,18 @@ class AuthRepositoryImp @Inject constructor (
             Log.e(TAG, "onLogin: error: $errorMessage")
             return AuthResult.Error(errorMessage)
         }
+    }
+
+    // TODO: and user data removal on log out 
+
+    private suspend fun saveUsername(uid: String) {
+        val usernameSnapshot = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
+            .whereEqualTo(Constants.DB_UID, uid)
+            .limit(1)
+            .get()
+            .await()
+
+        dataStoreRepository.saveUsername(usernameSnapshot.documents[0].id)
     }
 
     companion object {

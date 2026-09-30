@@ -6,17 +6,20 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.spbalkan.simplychat.chat.models.Conversation
 import com.spbalkan.simplychat.chat.models.ConversationDTO
 import com.spbalkan.simplychat.chat.models.ConversationUser
 import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.chat.models.MessageDTO
+import com.spbalkan.simplychat.data.DataStoreRepository
 import com.spbalkan.simplychat.utils.Constants
 import com.spbalkan.simplychat.utils.toDailyTime
 import com.spbalkan.simplychat.utils.toFirebaseTimestamp
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,12 +32,14 @@ interface ChatRepository {
     suspend fun findUserByKeyword(keyword: String): ChatResult
     suspend fun createNewChat(otherUsername: String, otherUserId: String): ChatResult
     suspend fun sendMessage(message: String, chatId: String): ChatResult
+    suspend fun hasUnreadMessages(): Boolean
 }
 
 @Singleton
 class ChatRepositoryImp @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firebaseDb: FirebaseFirestore
+    private val firebaseDb: FirebaseFirestore,
+    private val dataStoreRepository: DataStoreRepository
 ) : ChatRepository {
     override suspend fun getUserConversations(): ChatResult {
 
@@ -82,6 +87,7 @@ class ChatRepositoryImp @Inject constructor(
     }
 
     override fun listenToMessages(chatId: String): Flow<ChatResult> = callbackFlow {
+        Log.d(TAG, "listenToMessages: ")
         val userId = getUserAuthId()
 
         val listenerRegistration = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
@@ -195,6 +201,35 @@ class ChatRepositoryImp @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "sendMessage: error: ${e.message}")
             ChatResult.Error(e.message)
+        }
+    }
+
+    /**
+     * check if there is other chat participant message recently sent
+     * possible to improve / change this feature
+     */
+    override suspend fun hasUnreadMessages(): Boolean {
+
+        val currentUserId = auth.currentUser?.uid ?: return false
+        val username = dataStoreRepository.username.first()
+        val lastMessageSyncTimeStamp = dataStoreRepository.lastMessagesSync.first()?.toFirebaseTimestamp() ?: 0L.toFirebaseTimestamp()
+        Log.d(TAG, "hasUnreadMessages: lastMessageSyncTimeStamp: ${lastMessageSyncTimeStamp.toDailyTime()}")
+
+        return try {
+            val querySnapshot: QuerySnapshot = firebaseDb.collection(Constants.DB_CHATS_COLLECTION)
+                .whereEqualTo("${Constants.DB_PARTICIPANTS}.$currentUserId", username)
+                .whereNotEqualTo(Constants.DB_LAST_MESSAGE_SENDER_ID, currentUserId)
+                .whereGreaterThan(Constants.DB_LAST_UPDATED, lastMessageSyncTimeStamp)
+                .limit(1)
+                .get()
+                .await()
+
+            dataStoreRepository.saveLastMessagesSync(System.currentTimeMillis())
+            !querySnapshot.isEmpty
+
+        } catch (e: Exception) {
+            Log.e(TAG, "hasUnreadMessages: error: ${e.message}")
+            false
         }
     }
 
