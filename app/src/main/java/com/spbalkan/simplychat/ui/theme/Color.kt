@@ -15,3 +15,5 @@ val IceBlue40 = Color(0xFF006064)   // Tertiary: Dark Cyan
 val GreenNephritis = Color(0xFF27AE60)
 val GrayClouds = Color(0xFFECF0F1)
 val GrayMidnight = Color(0xFF2C3E50)
+val GrayWet = Color(0xFF34495E)
+val GraySilver = Color(0xFFBDC3C7)

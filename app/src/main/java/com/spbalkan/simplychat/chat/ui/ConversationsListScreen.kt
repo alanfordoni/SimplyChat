@@ -180,16 +180,20 @@ fun ConversationItem(
                     onClick()
                 }
             )
-            .padding(all = 16.dp)
+            .padding(all = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+
     ) {
         Text(
             text = username,
             fontSize = TextUnit(24f, TextUnitType.Sp)
         )
         lastMessage?.let { msg ->
-            Text(
+            Text(modifier = Modifier
+                .padding(start = 16.dp),
                 text = msg,
                 maxLines = 2,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = TextUnit(16f, TextUnitType.Sp)
             )
         }
