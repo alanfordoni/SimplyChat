@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import com.spbalkan.simplychat.App.Companion.CHANNEL_ID
 import com.spbalkan.simplychat.MainActivity
 import com.spbalkan.simplychat.R
+import com.spbalkan.simplychat.chat.data.ChatRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 

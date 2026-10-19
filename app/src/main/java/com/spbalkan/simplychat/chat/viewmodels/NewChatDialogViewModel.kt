@@ -3,8 +3,8 @@ package com.spbalkan.simplychat.chat.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spbalkan.simplychat.chat.ChatRepository
-import com.spbalkan.simplychat.chat.ChatResult
+import com.spbalkan.simplychat.chat.data.ChatRepository
+import com.spbalkan.simplychat.chat.data.ChatResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

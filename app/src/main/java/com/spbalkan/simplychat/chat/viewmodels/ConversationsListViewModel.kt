@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.spbalkan.simplychat.chat.ChatRepository
-import com.spbalkan.simplychat.chat.ChatResult
+import com.spbalkan.simplychat.chat.data.ChatRepository
+import com.spbalkan.simplychat.chat.data.ChatResult
 import com.spbalkan.simplychat.chat.models.Conversation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel

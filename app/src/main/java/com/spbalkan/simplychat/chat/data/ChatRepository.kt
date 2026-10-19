@@ -1,4 +1,4 @@
-package com.spbalkan.simplychat.chat
+package com.spbalkan.simplychat.chat.data
 
 import android.util.Log
 import com.google.firebase.Timestamp
@@ -271,3 +271,21 @@ sealed class ChatResult {
     data class ChatMessagesSuccess(val list: List<Message>) : ChatResult()
     data class Error(val error: String?) : ChatResult()
 }
+
+//            val conversationDTO = querySnapshot.documents[0].toObject(ConversationDTO::class.java)
+/*return conversationDTO?.lastUpdated?.let { lastUpdated ->
+    Log.d(TAG, "hasUnreadMessages: lastUpdated: $lastUpdated, lastMessageSyncTimeStamp: $lastMessageSyncTimeStamp")
+    true
+//                lastUpdated > lastMessageSyncTimeStamp
+} ?: run {
+    false
+}*/
+
+/*val list = querySnapshot.mapNotNull { documentSnapshot ->
+    Log.d(TAG, "hasUnreadMessages: snapshot iteration")
+    documentSnapshot.toObject(ConversationDTO::class.java)
+}
+
+list.forEach { conversation ->
+    Log.d(TAG, "hasUnreadMessages: last timestamp: ${conversation.lastUpdated?.toDailyTime()}")
+}*/

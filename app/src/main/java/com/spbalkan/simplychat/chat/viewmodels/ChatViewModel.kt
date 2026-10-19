@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.spbalkan.simplychat.Screen
-import com.spbalkan.simplychat.chat.ChatRepository
-import com.spbalkan.simplychat.chat.ChatResult
+import com.spbalkan.simplychat.chat.data.ChatRepository
+import com.spbalkan.simplychat.chat.data.ChatResult
 import com.spbalkan.simplychat.chat.models.Message
 import com.spbalkan.simplychat.utils.toDailyTime
 import com.spbalkan.simplychat.utils.toDateString
