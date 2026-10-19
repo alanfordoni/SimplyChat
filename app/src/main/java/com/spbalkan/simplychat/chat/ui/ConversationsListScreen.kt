@@ -2,6 +2,7 @@ package com.spbalkan.simplychat.chat.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.TextUnit
@@ -137,17 +140,6 @@ fun ConversationsListScreenContent(
             }
         }
 
-        FloatingActionButton(
-            onClick = {
-                onAction(ConversationsListViewModel.ActionIntent.OnSearchNewChat)
-            }
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_new_chat_24),
-                contentDescription = null
-            )
-        }
-
         if (state.showNewChatDialog) {
             NewChatDialog(
                 onOpenNewChat = { newChatUsername, newChatUid ->
@@ -159,6 +151,19 @@ fun ConversationsListScreenContent(
                 onDismiss = {
                     onAction(ConversationsListViewModel.ActionIntent.OnNewChatDismiss)
                 }
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Text(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp),
+                text = "v. ${LocalContext.current.packageManager.getPackageInfo(LocalContext.current.packageName, 0).versionName ?: ""}",
+                fontSize = TextUnit(12f, TextUnitType.Sp)
             )
         }
     }
