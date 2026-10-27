@@ -1,5 +1,10 @@
 package com.spbalkan.simplychat.chat.ui
 
+import android.Manifest
+import android.content.Context
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,8 +37,16 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.spbalkan.simplychat.R
+import com.spbalkan.simplychat.chat.CheckMessagesWorker
 import com.spbalkan.simplychat.chat.viewmodels.ConversationsListViewModel
+import com.spbalkan.simplychat.utils.Constants
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun ConversationsListScreen(
@@ -43,6 +56,29 @@ fun ConversationsListScreen(
     onLogout: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val hasRequested by viewModel.hasRequestedPermission.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) setupPeriodicMessageCheck(context)
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        viewModel.getUserConversations()
+    }
+
+    LaunchedEffect(hasRequested) {
+        val isLoadedAndNotRequested = hasRequested == false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !isLoadedAndNotRequested
+        ) {
+            viewModel.markPermissionAsRequested()
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     ConversationsListScreenContent(
         state = state,
@@ -69,6 +105,25 @@ fun ConversationsListScreen(
             }
         }
     }
+}
+
+private fun setupPeriodicMessageCheck(context: Context) {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+    val messageCheckRequest = PeriodicWorkRequestBuilder<CheckMessagesWorker>(
+        repeatInterval = 15,
+        repeatIntervalTimeUnit = TimeUnit.MINUTES
+    )
+        .setConstraints(constraints)
+        .build()
+
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        Constants.WM_CHECK_MESSAGES,
+        ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, // Keeps the active schedule across app restarts
+        messageCheckRequest
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

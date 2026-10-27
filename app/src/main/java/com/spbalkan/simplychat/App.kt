@@ -1,9 +1,13 @@
 package com.spbalkan.simplychat
 
+import android.Manifest
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
+import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.Constraints
@@ -13,6 +17,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.spbalkan.simplychat.auth.AuthRepository
 import com.spbalkan.simplychat.chat.CheckMessagesWorker
+import com.spbalkan.simplychat.chat.CheckMessagesWorker.Companion.TAG
 import com.spbalkan.simplychat.utils.Constants
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +41,18 @@ class App : Application(), Configuration.Provider {
 
         createNotificationChannel(applicationContext)
         if (authRepository.isUserSignedIn()) {
-            setupPeriodicMessageCheck()
+
+            if (ActivityCompat.checkSelfPermission(
+                    applicationContext,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.e(TAG, "createNotification: no permission")
+
+                return
+            } else {
+                setupPeriodicMessageCheck()
+            }
         }
     }
 

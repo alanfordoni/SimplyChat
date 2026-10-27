@@ -43,8 +43,19 @@ class CheckMessagesWorker @AssistedInject constructor (
         }
     }
 
+
+    // TODO: add flag if possible to trigger conversations list refresh on new message PN
     private fun createNotification(appContext: Context) {
         Log.d(TAG, "createNotification: ")
+        if (ActivityCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "createNotification: no permission")
+
+            return
+        }
 
         val intent = Intent(appContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -63,21 +74,6 @@ class CheckMessagesWorker @AssistedInject constructor (
             .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(appContext)) {
-            if (ActivityCompat.checkSelfPermission(
-                    appContext,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                Log.e(TAG, "createNotification: no permission")
-                // TODO: Consider calling ActivityCompat#requestPermissions here
-                // to request the missing permissions, and then overriding
-                // public fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-                //                                        grantResults: IntArray)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-
-                return@with
-            }
             // notificationId is a unique int for each notification that you must define.
             notify(CHECK_MESSAGES_NOTIFICATION_ID, builder.build())
         }

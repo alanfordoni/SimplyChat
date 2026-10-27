@@ -7,6 +7,7 @@ import com.google.firebase.auth.auth
 import com.spbalkan.simplychat.chat.data.ChatRepository
 import com.spbalkan.simplychat.chat.data.ChatResult
 import com.spbalkan.simplychat.chat.models.Conversation
+import com.spbalkan.simplychat.data.DataStoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConversationsListViewModel @Inject constructor (
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val dataStoreRepository: DataStoreRepository
 ): ViewModel() {
 
     private val _state = MutableStateFlow(ConversationsState())
@@ -27,7 +29,18 @@ class ConversationsListViewModel @Inject constructor (
     private val _eventChannel = Channel<ConversationsEvents>(Channel.BUFFERED)
     val event = _eventChannel.receiveAsFlow()
 
+    private val _hasRequestedPermission = MutableStateFlow<Boolean?>(null)
+    val hasRequestedPermission = _hasRequestedPermission.asStateFlow()
+
     init {
+        viewModelScope.launch {
+            dataStoreRepository.hasRequestedNotificationPermission.collect { value ->
+                _hasRequestedPermission.value = value
+            }
+        }
+    }
+
+    fun getUserConversations() {
         viewModelScope.launch {
             val result = chatRepository.getUserConversations()
             when (result) {
@@ -38,9 +51,9 @@ class ConversationsListViewModel @Inject constructor (
                         )
                     }
                 }
-                
+
                 else -> {
-                    // TODO:  
+                    // TODO:
                 }
             }
         }
@@ -77,6 +90,12 @@ class ConversationsListViewModel @Inject constructor (
                     )
                 }
             }
+        }
+    }
+
+    fun markPermissionAsRequested() {
+        viewModelScope.launch {
+            dataStoreRepository.saveHasRequestedNotificationPermission(true)
         }
     }
 

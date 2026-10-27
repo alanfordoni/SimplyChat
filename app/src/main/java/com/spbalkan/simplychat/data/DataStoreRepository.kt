@@ -2,6 +2,7 @@ package com.spbalkan.simplychat.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -17,6 +18,7 @@ class DataStoreRepository @Inject constructor(
     private object PreferencesKeys {
         val LAST_MESSAGES_SYNC = longPreferencesKey("last_messages_sync")
         val USERNAME = stringPreferencesKey("username")
+        val HAS_REQUESTED_NOTIFICATION_PERMISSION = booleanPreferencesKey("has_requested_notification_permission")
     }
 
     val lastMessagesSync: Flow<Long?> = dataStore.data
@@ -39,6 +41,17 @@ class DataStoreRepository @Inject constructor(
     suspend fun saveUsername(username: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.USERNAME] = username
+        }
+    }
+
+    val hasRequestedNotificationPermission: Flow<Boolean?> = dataStore.data
+        .map { preferences ->
+            preferences[PreferencesKeys.HAS_REQUESTED_NOTIFICATION_PERMISSION]
+        }
+
+    suspend fun saveHasRequestedNotificationPermission(hasRequestedNotificationPermission: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.HAS_REQUESTED_NOTIFICATION_PERMISSION] = hasRequestedNotificationPermission
         }
     }
 
