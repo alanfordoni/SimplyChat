@@ -4,10 +4,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -153,7 +155,8 @@ fun ChatScreenContent(
             itemsIndexed(
                 items = messagesState.messagesList,
                 key = { _, message -> message.id }
-            ) { _, message ->
+            ) { index, message ->
+
                 if (message is ChatViewModel.ChatWrapperItem.DateHeader) {
                     Text(
                         modifier = Modifier
@@ -162,7 +165,17 @@ fun ChatScreenContent(
                         textAlign = TextAlign.Center,
                         text = message.dateText)
                 } else {
-                    MessageItem(message as ChatViewModel.ChatWrapperItem.MessageBubble)
+                    val message = message as ChatViewModel.ChatWrapperItem.MessageBubble
+                    var addSpace = false
+
+                    if (index - 1 >= 0) {
+                        val nextMessage = messagesState.messagesList[index - 1] as? ChatViewModel.ChatWrapperItem.MessageBubble
+                        if (nextMessage != null && message.isReceivedMessage != nextMessage.isReceivedMessage) {
+                            addSpace = true
+                        }
+                    }
+
+                    MessageItem(message, addSpace)
                 }
             }
         }
@@ -171,34 +184,34 @@ fun ChatScreenContent(
 
 @Composable
 fun MessageItem(
-    message: ChatViewModel.ChatWrapperItem.MessageBubble
+    message: ChatViewModel.ChatWrapperItem.MessageBubble,
+    addSpace: Boolean
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        if (message.isReceivedMessage) {
-            ReceivedMessage(
-                Modifier.align(Alignment.CenterStart),
-                message
-            )
-        } else {
-            MyMessage(
-                Modifier.align(Alignment.CenterEnd),
-                message
-            )
+        Column(
+            modifier = Modifier.align(if (message.isReceivedMessage) Alignment.CenterStart else Alignment.CenterEnd)
+        ) {
+            if (message.isReceivedMessage) {
+                ReceivedMessage(message)
+            } else {
+                MyMessage(message)
+            }
+
+            if (addSpace) Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
 fun MyMessage(
-    modifier: Modifier = Modifier,
     message: ChatViewModel.ChatWrapperItem.MessageBubble
 ) {
     Box(
-        modifier = modifier
+        modifier = Modifier
             .wrapContentWidth()
             .padding(
                 start = 48.dp
@@ -238,11 +251,10 @@ fun MyMessage(
 
 @Composable
 fun ReceivedMessage(
-    modifier: Modifier = Modifier,
     message: ChatViewModel.ChatWrapperItem.MessageBubble
 ) {
     Box(
-        modifier = modifier
+        modifier = Modifier
             .wrapContentWidth()
             .padding(
                 end = 48.dp

@@ -1,5 +1,6 @@
 package com.spbalkan.simplychat.chat.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -75,7 +76,7 @@ class ChatViewModel @Inject constructor(
     private fun transformToUiItems(messages: List<Message>): List<ChatWrapperItem> {
         if (messages.isEmpty()) return emptyList()
 
-        // group messages by LocalDate (ignoring time portion)
+        // group messages by LocalDate
         val groupedMessages: Map<LocalDate, List<Message>> = messages.groupBy { message ->
             val epochMillis = message.timestamp.toDate().time
             Instant.ofEpochMilli(epochMillis)
@@ -142,5 +143,9 @@ class ChatViewModel @Inject constructor(
             val isReceivedMessage: Boolean,
             val time: String
         ) : ChatWrapperItem
+    }
+
+    companion object {
+        private const val TAG = "zzChatVM"
     }
 }
