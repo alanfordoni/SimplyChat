@@ -144,17 +144,17 @@ class RegisterViewModel @Inject constructor(
     fun register() {
         val email = _state.value.email
         val password = _state.value.password
+        val username = _state.value.username
 
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             Log.d(TAG, "register: ")
 
-            val result = authRepository.onRegister(email, password)
+            val result = authRepository.onRegister(email, password, username)
             Log.d(TAG, "register: 2")
 
             when (result) {
                 is AuthResult.RegisterSuccess -> {
-                    addUsername(result.uid)
                     _eventChannel.send(RegisterEvent.Success)
                 }
 
@@ -166,12 +166,6 @@ class RegisterViewModel @Inject constructor(
                 else -> {}
             }
         }
-    }
-
-    suspend fun addUsername(uid: String) {
-        authRepository.addUsername(_state.value.username, uid)
-
-        _state.update { it.copy(isLoading = false) }
     }
 
     data class RegisterState(

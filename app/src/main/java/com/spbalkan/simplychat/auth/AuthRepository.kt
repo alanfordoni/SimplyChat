@@ -13,7 +13,7 @@ interface AuthRepository {
     fun isUserSignedIn(): Boolean
     suspend fun doesUserExist(rawUsername: String): Boolean
     suspend fun addUsername(rawUsername: String, uid: String): AuthResult
-    suspend fun onRegister(email: String, password: String): AuthResult
+    suspend fun onRegister(email: String, password: String, username: String): AuthResult
     suspend fun onLogin(email: String, password: String): AuthResult
 }
 
@@ -65,7 +65,7 @@ class AuthRepositoryImp @Inject constructor (
         }
     }
 
-    override suspend fun onRegister(email: String, password: String): AuthResult {
+    override suspend fun onRegister(email: String, password: String, username: String): AuthResult {
 
         try {
             val result = auth
@@ -73,7 +73,8 @@ class AuthRepositoryImp @Inject constructor (
                 .await()
 
             return result.user?.uid?.let { uid ->
-                saveUsername(uid)
+                addUsername(username, uid)
+                saveUsername(username, uid)
                 AuthResult.RegisterSuccess(uid)
             } ?: run {
                 Log.e(TAG, "onRegister: error: user null")
@@ -94,7 +95,7 @@ class AuthRepositoryImp @Inject constructor (
                 .await()
 
             auth.currentUser?.uid?.let { userId ->
-                saveUsername(userId)
+                saveUsername(uid = userId)
             }
 
             return AuthResult.LoginSuccess
@@ -108,16 +109,20 @@ class AuthRepositoryImp @Inject constructor (
 
     // TODO: and user data removal on log out 
 
-    private suspend fun saveUsername(uid: String) {
-        Log.d(TAG, "saveUsername: ")
-        
-        val usernameSnapshot = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
-            .whereEqualTo(Constants.DB_UID, uid)
-            .limit(1)
-            .get()
-            .await()
+    private suspend fun saveUsername(username: String? = null, uid: String) {
 
-        dataStoreRepository.saveUsername(usernameSnapshot.documents[0].id)
+        var mUsername = username
+        if (mUsername.isNullOrEmpty()) {
+            val usernameSnapshot = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
+                .whereEqualTo(Constants.DB_UID, uid)
+                .limit(1)
+                .get()
+                .await()
+
+            mUsername = usernameSnapshot.documents[0].id
+        }
+
+        dataStoreRepository.saveUsername(mUsername)
     }
 
     companion object {
