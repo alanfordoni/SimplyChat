@@ -14,10 +14,12 @@
     <string name="error_email_not_valid">Please enter a valid email address.</string>
     <string name="error_password_not_valid">Please enter a valid password.</string>
     <string name="error_confirm_password">Passwords don\'t match.</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="label_forgot_password_reset">Send reset link</string>
     <string name="or_register">or Register</string>
     <string name="or_login">or Login</string>
 <!-- Chat -->
-    <string name="label_search_user">Search User</string>
+    <string name="label_enter_username">Username:</string>
     <string name="error_username_search_too_short">Username has 5 characters minimum.</string>
     <string name="button_open_chat">Open Chat</string>
     <string name="label_chats">Chats</string>

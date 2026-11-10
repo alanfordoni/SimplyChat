@@ -109,6 +109,8 @@ class AuthRepositoryImp @Inject constructor (
     // TODO: and user data removal on log out 
 
     private suspend fun saveUsername(uid: String) {
+        Log.d(TAG, "saveUsername: ")
+        
         val usernameSnapshot = firebaseDb.collection(Constants.DB_USERNAMES_COLLECTION)
             .whereEqualTo(Constants.DB_UID, uid)
             .limit(1)

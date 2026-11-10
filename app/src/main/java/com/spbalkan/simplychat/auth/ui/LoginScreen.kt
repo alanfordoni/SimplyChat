@@ -2,6 +2,7 @@ package com.spbalkan.simplychat.auth.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -137,18 +138,42 @@ fun LoginScreenContent(
                 }
             )
 
-            TextButton(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .align(Alignment.End),
-                onClick = { onRegister() }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    modifier = Modifier.widthIn(min = 120.dp),
-                    text = stringResource(R.string.or_register),
-                    textAlign = TextAlign.End
+                TextButton(
+                    modifier = Modifier
+                        .wrapContentWidth(),
+                    onClick = { onAction(OnForgotPassword(true)) }
+                ) {
+                    Text(
+                        modifier = Modifier.widthIn(min = 120.dp),
+                        text = stringResource(R.string.forgot_password),
+                        textAlign = TextAlign.Start
+                    )
+                }
+
+                TextButton(
+                    modifier = Modifier
+                        .wrapContentWidth(),
+                    onClick = { onRegister() }
+                ) {
+                    Text(
+                        modifier = Modifier.widthIn(min = 120.dp),
+                        text = stringResource(R.string.or_register),
+                        textAlign = TextAlign.End
+                    )
+                }
+            }
+
+            if (state.showForgotPasswordDialog) {
+                ForgotPasswordDialog(
+                    email = state.email,
+                    onDismiss = { onAction(OnForgotPassword(false)) }
                 )
             }
+
         }
     }
 

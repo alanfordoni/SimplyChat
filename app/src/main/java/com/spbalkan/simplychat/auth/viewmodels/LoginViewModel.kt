@@ -56,6 +56,14 @@ class LoginViewModel @Inject constructor(
             is ActionIntent.OnLogin -> {
                 login()
             }
+
+            is ActionIntent.OnForgotPassword -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        showForgotPasswordDialog = action.showDialog
+                    )
+                }
+            }
         }
     }
 
@@ -92,13 +100,15 @@ class LoginViewModel @Inject constructor(
         val isLoading: Boolean = false,
         val emailError: Boolean = false,
         val passwordError: Boolean = false,
-        val loginEnabled: Boolean = false
+        val loginEnabled: Boolean = false,
+        val showForgotPasswordDialog: Boolean = false
     )
 
     sealed class ActionIntent {
         data class OnEmailChange(val email: String) : ActionIntent()
         data class OnPasswordChange(val password: String) : ActionIntent()
         data object OnLogin : ActionIntent()
+        data class OnForgotPassword(val showDialog: Boolean) : ActionIntent()
     }
 
     sealed interface LoginEvent {

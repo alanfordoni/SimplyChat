@@ -98,7 +98,7 @@ fun NewChatDialogContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CustomInputTextView(
-                labelText = stringResource(R.string.label_search_user),
+                labelText = stringResource(R.string.label_enter_username),
                 inputText = state.searchText,
                 errorText = stringResource(R.string.error_username_search_too_short),
                 isError = state.isSearchTextError,
